@@ -1,0 +1,13 @@
+KEFIRJS-SIGNED-1
+4c0d3c6d72c5e37c2572291ea9b61e92c0b905eb1838153daa8d96ba411aa99200d233efdeffdad8cfc695a35577d2b6b42459444aa4443fc826a5a1fd30fa0c
+KEFIRJS-UPDATE-1
+version	1.2.0
+base	20.5.0-786
+note	Check for updates and read release notes from the new KEFIRJS Updater.
+note	Open it from Homebrew, press X in KEFIRIZ System, or start a game while holding R + X.
+note	Install signed releases directly on your microSD with file verification and interrupted-update recovery.
+note	Retire known files from the old Kefir Updater while preserving personal changes.
+file	hbmenu.nro	324947	23574d871a64b7445ed0ed13a1fab757a7f8f314a828acf4efc39e7fa987624e
+file	switch/KEFIRJS-Updater/KEFIRJS-Updater.nro	374257	473b44b820347e884b1836fbdf2f20f2f7b32f801963847b4af72dafeda1c4c2
+file	switch/KEFIRIZ-System/KEFIRIZ-System.nro	275795	208bd6042f1f37169da2ba75259334e91128201d4d6fec3c68d89517abac5358
+file	config/kefiriz/release.txt	36	4751e7846779e7adef4a22bdc9a384a4fa08f7895c19e206c31c34ab4b501296

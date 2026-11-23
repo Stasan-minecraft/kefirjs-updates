@@ -1,0 +1,4 @@
+Check for updates and read release notes from the new KEFIRJS Updater.
+Open it from Homebrew, press X in KEFIRIZ System, or start a game while holding R + X.
+Install signed releases directly on your microSD with file verification and interrupted-update recovery.
+Retire known files from the old Kefir Updater while preserving personal changes.
