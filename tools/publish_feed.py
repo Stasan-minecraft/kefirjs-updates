@@ -40,6 +40,7 @@ def signing_key(create=False):
 def main():
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument("--public-header", type=Path, required=True)
+    cli.add_argument("--atmosphere-edition", action="store_true", help="Use the independent Atmosphere channel and archive")
     cli.add_argument("--initialize", action="store_true")
     cli.add_argument("--archive", type=Path)
     cli.add_argument("--version")
@@ -66,32 +67,39 @@ def main():
     notes = args.notes.read_text(encoding="ascii").splitlines()
     if not 1 <= len(notes) <= 8 or any(not re.fullmatch(r"[ -~]{1,112}", x) for x in notes):
         raise ValueError("Expected 1 to 8 single-line release notes")
-    body = ["KEFIRJS-UPDATE-1", "version\t" + args.version, "base\t20.5.0-786"]
+    independent = args.atmosphere_edition
+    base = "20.5.0-ams-1.10.1" if independent else "20.5.0-786"
+    edition = "Atmosphere edition" if independent else "Horizon edition 786"
+    channel = "updates/atmosphere" if independent else "updates"
+    if independent and args.output.name != "atmosphere":
+        raise ValueError("Select updates/atmosphere for this independent channel")
+    body = ["KEFIRJS-UPDATE-1", "version\t" + args.version, "base\t" + base]
     body.extend("note\t" + note for note in notes)
     data = bytearray()
     with ZipFile(args.archive) as pack:
-        manifest = json.loads(pack.read("release.json"))
+        root = "config/kefiriz/standalone/bundle/" if independent else ""
+        manifest = json.loads(pack.read(root + ("manifest.json" if independent else "release.json")))
         entries = {e["path"]:e for e in manifest["files"]}
         if manifest["version"] != args.version or manifest["horizon"] != "20.5.0":
             raise ValueError("Version or base mismatch")
-        if manifest["id"] != "KEFIRIZ-786" or len(entries) != len(manifest["files"]):
+        if manifest["id"] != ("KEFIRIZ-ATM" if independent else "KEFIRIZ-786") or len(entries) != len(manifest["files"]):
             raise ValueError("Wrong edition or duplicate SD destinations")
-        baseline = json.loads(Path(__file__).with_name("base-1.1.0.json").read_text("ascii"))
+        baseline = json.loads(Path(__file__).with_name("base-atmosphere-2.0.0.json" if independent else "base-1.1.0.json").read_text("ascii"))
         changed = {name for name in baseline.keys() | entries.keys()
                    if baseline.get(name) != entries.get(name, {}).get("sha256")}
         if changed.difference(FILES):
             raise ValueError("The native client needs support for these additional changes: " +
                              ", ".join(sorted(changed.difference(FILES))))
         for name in FILES:
-            file = pack.read("sd/" + name)
+            file = pack.read(root + "sd/" + name)
             size, digest = len(file), sha256(file).hexdigest()
             if entries[name]["sha256"] != digest or entries[name]["size"] != size:
                 raise ValueError("Release file is damaged: " + name)
-            if name == FILES[-1] and file.splitlines() != [f"KEFIRIZ {args.version} / Horizon edition 786".encode()]:
+            if name == FILES[-1] and file.splitlines() != [f"KEFIRIZ {args.version} / {edition}".encode()]:
                 raise ValueError("Wrong installed-release marker")
             data.extend(file)
             body.append(f"file\t{name}\t{size}\t{digest}")
-        standalone = pack.read("sd/" + FILES[1])
+        standalone = pack.read(root + "sd/" + FILES[1])
     content = ("\n".join(body) + "\n").encode("ascii")
     envelope = b"KEFIRJS-SIGNED-1\n" + key.sign(content).hex().encode() + b"\n" + content
     folder = args.output / args.version
@@ -103,8 +111,8 @@ def main():
         path.write_bytes(value)
     (args.output / "stable.kfu").write_bytes(envelope)
     if args.offline_zip:
-        members = {FILES[1]: standalone, "config/kefirjs/offline/updates/stable.kfu": envelope,
-                   f"config/kefirjs/offline/updates/{args.version}/update.bin": data}
+        members = {FILES[1]: standalone, f"config/kefirjs/offline/{channel}/stable.kfu": envelope,
+                   f"config/kefirjs/offline/{channel}/{args.version}/update.bin": data}
         with ZipFile(args.offline_zip, "w") as pack:
             for name, value in members.items():
                 entry = ZipInfo(name)

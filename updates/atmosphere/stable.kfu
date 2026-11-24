@@ -1,0 +1,12 @@
+KEFIRJS-SIGNED-1
+4c289c02d62c158e183670a4b3bddd63b93eac86c32a9aba5f2973093c029e86403131bb775a21be604997e06cb6ba773300da1c664c1e50ea786cd2f1f15d0d
+KEFIRJS-UPDATE-1
+version	2.0.0
+base	20.5.0-ams-1.10.1
+note	Independent KEFIRIZ distribution for Horizon 20.5.0 on upstream Atmosphere 1.10.1.
+note	First boot uses the system HOME and lock screen. Homebrew never auto-installs a theme batch.
+note	Native HOME artwork uses a new export from this Switch. Recovery saves active layouts to the card.
+file	hbmenu.nro	320851	be59842f4780f5b9a641c9af801df247efd6e94666e07995894175313a6182c0
+file	switch/KEFIRJS-Updater/KEFIRJS-Updater.nro	374257	9f097a33f9dfb565c84c82f4396e2bd0c256d82350350fc9b73dfd1c343e50af
+file	switch/KEFIRIZ-System/KEFIRIZ-System.nro	275795	208bd6042f1f37169da2ba75259334e91128201d4d6fec3c68d89517abac5358
+file	config/kefiriz/release.txt	35	2a3b15ad93511da18739fb0685cd02e05a506b524e76559af535777c950c8e06

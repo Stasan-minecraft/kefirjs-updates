@@ -1,5 +1,6 @@
 #include "engine_platform.h"
 #include "publisher.h"
+#include "edition.h"
 #include <switch.h>
 #include <arpa/inet.h>
 #include <errno.h>
@@ -32,7 +33,7 @@ void kf_unlock(void) {
     if (have_file) { fsFileClose(&card_lock); have_file = false; }
 }
 bool kf_lock(void) {
-    const char *path = "/config/kefirjs/ota/operation.lock";
+    const char *path = "/" KF_OTA "/operation.lock";
     FsFileSystem *fs = fsdevGetDeviceFileSystem("sdmc");
     if (have_file || !fs) return false;
     Result rc = fsFsCreateFile(fs, path, 0, 0);

@@ -1,5 +1,11 @@
 # KEFIRIZ · Switch updates
 
+**[KEFIRIZ 2.0.0 · independent Atmosphère edition (hardware preview)](updates/atmosphere/2.0.0/README.md)** uses upstream Atmosphère 1.10.1 on Horizon 20.5.0 and boots with the original Nintendo HOME and lock screen. The installer includes native artwork preparation and microSD recovery. [Download the full Windows installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.0.0/KEFIRIZ-Atmosphere-2.0.0.zip)
+
+**Boot crash after applying a theme?** Power off the console, unzip the recovery tool on Windows and run **KEFIRIZ-Theme-Recovery.cmd** with the microSD connected. It backs up the active theme files before the next boot. [Download theme recovery](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.0.0/KEFIRIZ-Theme-Recovery.zip)
+
+## Legacy 786 edition
+
 Get KEFIRIZ for a Nintendo Switch already running **Horizon 20.5.0 / Kefir 786 / Atmosphère 1.10.0**. The release preserves Nintendo HOME and includes KEFIRIZ Homebrew, game profiles, background downloads and custom native themes.
 
 **[Download KEFIRIZ 1.2.0](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/v1.2.0/KEFIRIZ-786-1.2.0.zip)** · [Get KEFIRJS Updater](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/v1.2.0/KEFIRJS-Updater.nro) · [Release notes](updates/1.2.0/README.md)

@@ -1,4 +1,5 @@
 #include "engine.h"
+#include "edition.h"
 #include "engine_platform.h"
 #include "publisher.h"
 #include "crypto/monocypher-ed25519.h"
@@ -13,14 +14,13 @@
 #else
 #define SD ""
 #endif
-#define OTA SD "config/kefirjs/ota"
+#define OTA SD KF_OTA
 #define PREP OTA "/preparing"
 #define ACTIVE OTA "/active"
 #define OFFLINE SD "config/kefirjs/offline/"
 #define MARKER "config/kefiriz/release.txt"
 #define UPDATER "switch/KEFIRJS-Updater/KEFIRJS-Updater.nro"
 #define SYSAPP "switch/KEFIRIZ-System/KEFIRIZ-System.nro"
-#define BASE_HASH "1fca4f0a1d2a214d7d92c0574827066e59bbfc4e230750a800654534f1820ac2"
 #define MAX_BLOB (32u * 1024u * 1024u)
 #define MAX_FEED 8192u
 #define COUNT(x) (sizeof(x) / sizeof((x)[0]))
@@ -151,7 +151,7 @@ static bool parse(const Buffer *input, Manifest *m) {
     if (!line || strncmp(line, "version\t", 8) || !version(line + 8, v)) return false;
     memset(m, 0, sizeof(*m)); strcpy(m->version, line + 8);
     line = next_line(&cursor);
-    if (!line || strcmp(line, "base\t20.5.0-786")) return false;
+    if (!line || strcmp(line, "base\t" KF_BASE)) return false;
     unsigned notes = 0;
     while ((line = next_line(&cursor))) {
         char *f[4];
@@ -206,7 +206,7 @@ static bool read_marker(const char *path, char out[24]) {
     line[n] = 0;
     if (strncmp(line, "KEFIRIZ ", 8)) return false;
     char *end = strchr(line + 8, ' '); unsigned v[3];
-    if (!end || strcmp(end, " / Horizon edition 786")) return false;
+    if (!end || strcmp(end, " / " KF_EDITION)) return false;
     *end = 0;
     if (!version(line + 8, v)) return false;
     strcpy(out, line + 8); return true;
@@ -219,9 +219,9 @@ int kf_check(KfUpdate *u, KfProgress cb, void *ctx) {
     kf_local(u);
     selection.count = 0; signed_feed.used = 0; offline = false;
     if (cb) cb("Checking GitHub", 0, 0, ctx);
-    if (!kf_fetch("updates/stable.kfu", mem_sink, &signed_feed, MAX_FEED, NULL, NULL)) {
+    if (!kf_fetch(KF_UPDATES "/stable.kfu", mem_sink, &signed_feed, MAX_FEED, NULL, NULL)) {
         signed_feed.used = 0;
-        if (!from_file(OFFLINE "updates/stable.kfu", mem_sink, &signed_feed, MAX_FEED))
+        if (!from_file(OFFLINE KF_UPDATES "/stable.kfu", mem_sink, &signed_feed, MAX_FEED))
             return fail(u, "Could not reach GitHub or find an offline update. Check the connection and system date.");
         offline = true;
     }
@@ -229,8 +229,8 @@ int kf_check(KfUpdate *u, KfProgress cb, void *ctx) {
     if (!parse(&signed_feed, &verified)) return fail(u, "The update signature or release format is invalid.");
     strcpy(u->latest, verified.version); strcpy(u->notes, verified.notes); u->bytes = verified.bytes;
     int cmp = compare(u->current, u->latest);
-    if (cmp == -2 || compare(u->current, "1.1.0") < 0)
-        return fail(u, "Install KEFIRIZ Horizon edition 786 with the Windows installer first.");
+    if (cmp == -2 || compare(u->current, KF_MINIMUM) < 0)
+        return fail(u, "Install KEFIRIZ " KF_EDITION " with the Windows installer first.");
     if (cmp >= 0) {
         strcpy(u->message, cmp ? "The installed release is newer than this channel." : "You are up to date.");
         return KF_CURRENT;
@@ -272,7 +272,7 @@ static bool regular_hash(const char *path, char out[65]) {
 }
 static bool is_base(void) {
     char hex[65];
-    return kf_horizon_ok() && regular_hash(SD "atmosphere/package3", hex) && !strcmp(hex, BASE_HASH);
+    return kf_horizon_ok() && regular_hash(SD "atmosphere/package3", hex) && !strcmp(hex, KF_BASE_HASH);
 }
 static void member(char out[256], const char *dir, const char *kind, size_t index) {
     snprintf(out, 256, "%s/%s-%02u.bin", dir, kind, (unsigned)index);
@@ -469,14 +469,14 @@ static int apply_locked(KfUpdate *u, KfProgress cb, void *ctx) {
     if (!stat(ACTIVE, &st) || errno != ENOENT) return fail(u, "Reopen the updater to recover the previous transaction.");
     char current[24], final[256];
     if (!read_marker(SD MARKER, current) || strcmp(current, u->current) ||
-        compare(current, "1.1.0") < 0 || compare(current, selection.version) != -1)
-        return fail(u, "This update requires the matching installed 20.5.0 / 786 release.");
+        compare(current, KF_MINIMUM) < 0 || compare(current, selection.version) != -1)
+        return fail(u, "This update requires the matching KEFIRIZ " KF_EDITION " installation.");
     if (!version_dir(final, &selection)) return fail(u, "A saved transaction for this version already exists.");
     if (!parents(PREP "/placeholder") || !clear_work() || !folder(PREP)) return fail(u, "Could not prepare the update directory.");
     uint64_t needed, available;
     if (!count_space(&selection, &needed) || !kf_free(&available) || available < needed)
         return fail(u, "Insufficient free microSD space for the update and its backup.");
-    char relative[128]; snprintf(relative, sizeof(relative), "updates/%s/update.bin", selection.version);
+    char relative[128]; snprintf(relative, sizeof(relative), KF_UPDATES "/%s/update.bin", selection.version);
     FILE *f = fopen(PREP "/payload.bin", "wb");
     if (!f) return fail(u, "Could not open a staging file on the card.");
     if (cb) cb("Downloading update", 0, selection.bytes, ctx);
@@ -502,7 +502,7 @@ static int apply_locked(KfUpdate *u, KfProgress cb, void *ctx) {
 }
 static int exclusive(KfUpdate *u, KfProgress cb, void *ctx, bool recovery) {
     if (!is_base())
-        return fail(u, "This update requires the matching installed 20.5.0 / 786 release.");
+        return fail(u, "This update requires the matching KEFIRIZ " KF_EDITION " installation.");
     if (!parents(OTA "/operation.lock") || !kf_lock())
         return fail(u, "Could not lock the card. Close any other updater and try again.");
     int rc = recovery ? recover_locked(u, cb, ctx) : apply_locked(u, cb, ctx);

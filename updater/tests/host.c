@@ -1,6 +1,7 @@
 /* Desktop adapter for the real updater engine. Run inside a disposable SD fixture. */
 #include "../engine_platform.h"
 #include "../publisher.h"
+#include "../edition.h"
 #include <openssl/evp.h>
 #include <curl/curl.h>
 #include <errno.h>
@@ -27,7 +28,7 @@ static void wait_for_kill(void) {
 #ifdef _WIN32
 static HANDLE lock_handle;
 bool kf_lock(void) {
-    lock_handle = CreateFileA("config/kefirjs/ota/operation.lock", GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    lock_handle = CreateFileA(KF_OTA "/operation.lock", GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (lock_handle == INVALID_HANDLE_VALUE) return false;
     if (getenv("KF_TEST_HOLD_PREPARE")) wait_for_kill();
     return true;
@@ -36,7 +37,7 @@ void kf_unlock(void) { CloseHandle(lock_handle); }
 #else
 static int lock_file;
 bool kf_lock(void) {
-    lock_file = open("config/kefirjs/ota/operation.lock", O_RDWR | O_CREAT, 0600);
+    lock_file = open(KF_OTA "/operation.lock", O_RDWR | O_CREAT, 0600);
     if (lock_file < 0) return false;
     if (flock(lock_file, LOCK_EX | LOCK_NB)) { close(lock_file); return false; }
     if (getenv("KF_TEST_HOLD_PREPARE")) wait_for_kill();

@@ -11,3 +11,7 @@ python tools/publish_feed.py --public-header updater/publisher.h --archive "KEFI
 ```
 
 The publisher key is protected by Windows DPAPI for the account that created this channel and is kept in `%LOCALAPPDATA%/KEFIRJS/publishing/`. Only the public key belongs in version control. Keep a recoverable backup of the Windows publisher profile and its protected key. A different Windows account needs an explicit key migration or a new trusted client release.
+
+## Independent Atmosphere channel
+
+Use the full Atmosphere edition Windows ZIP and pass `--atmosphere-edition --output updates/atmosphere` when signing. The independent client reads its own feed and checks the official Atmosphere core before committing application updates. Its baseline is `base-atmosphere-2.0.0.json`. System runtime and native layout migrations use the full Windows installer.

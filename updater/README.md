@@ -23,3 +23,5 @@ To run the navigation and confirmation-state test on a PC, build `ui.c` and `tes
 The built-in ImageGen tool generated the firmware update icon. The `icon.jpg` file is a 256 × 256 RGB JPEG used in the NRO metadata and its on-screen update panel.
 
 > Use case: stylized-concept. Square high-end handheld firmware update app icon. A single physical object, a wide folded scarlet metal ribbon shaped into an open circular update arrow rotating clockwise, arrowhead at 1 o'clock, seen straight on, centered, taking 74 percent of the square. Cherry red enamel, one brighter coral facet and fine charcoal shadow, large bold silhouette legible on a tiny device screen. Full bleed warm pearl-white untextured background, soft studio light. No text, no marks, no secondary symbols, no device frame, no border, no rounded icon container. Symmetrical visual balance.
+
+Build with `--atmosphere-edition` for KEFIRIZ 2.0.0 on official Atmosphere 1.10.1. It reads the independently signed feed in `updates/atmosphere`, uses a separate recovery journal, and requires the matching edition and runtime.

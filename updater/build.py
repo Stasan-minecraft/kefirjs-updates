@@ -28,6 +28,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sdk", type=Path, default=os.getenv("DEVKITPRO") or "C:/devkitPro")
     parser.add_argument("--output", type=Path, default=Path("KEFIRJS-Updater.nro"))
+    parser.add_argument("--atmosphere-edition", action="store_true")
     args = parser.parse_args()
     sdk = args.sdk.resolve()
     nx = sdk / "libnx"
@@ -54,10 +55,12 @@ def main():
                  "-mtune=cortex-a57", "-mtp=soft", "-fPIE", "-ffunction-sections", "-fdata-sections",
                  "-D__SWITCH__", "-I.", "-I" + (nx / "include").as_posix(),
                  "-L" + (nx / "lib").as_posix(), "-specs=" + (nx / "switch.specs").as_posix()]
+        if args.atmosphere_edition:
+            flags.append("-DKF_ATMOSPHERE_EDITION")
         subprocess.run([cc, *flags, *sources, "-o", "updater.elf", "-lnx", "-lm"],
                        env=env, cwd=work, check=True)
         subprocess.run([tools / ("nacptool" + suffix), "--create", "KEFIRJS Updater", "KEFIRJS",
-                        "1.2.0", "updater.nacp"], cwd=work, check=True)
+                        "2.0.0" if args.atmosphere_edition else "1.2.0", "updater.nacp"], cwd=work, check=True)
         subprocess.run([tools / ("elf2nro" + suffix), "updater.elf", "updater.nro",
                         "--icon=icon.jpg", "--nacp=updater.nacp"], cwd=work, check=True)
         binary = (work / "updater.nro").read_bytes()

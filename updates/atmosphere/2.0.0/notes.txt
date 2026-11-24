@@ -1,0 +1,3 @@
+Independent KEFIRIZ distribution for Horizon 20.5.0 on upstream Atmosphere 1.10.1.
+First boot uses the system HOME and lock screen. Homebrew never auto-installs a theme batch.
+Native HOME artwork uses a new export from this Switch. Recovery saves active layouts to the card.

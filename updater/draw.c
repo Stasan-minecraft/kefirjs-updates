@@ -1,3 +1,4 @@
+#include "edition.h"
 #include "ui.h"
 #include <math.h>
 #include <stdio.h>
@@ -115,7 +116,7 @@ void up_draw(uint32_t *pixels,int stride,const UpView *v) {
     icon(82,240);
     label(83,411,25,"Installed firmware",p.muted,356);
     label(81,469,52,v->release.current[0]?v->release.current:"Unavailable",p.text,357);
-    label(83,524,25,"KEFIRIZ  /  Horizon edition 786",p.muted,357);
+    label(83,524,25,"KEFIRIZ  /  " KF_EDITION,p.muted,357);
 
     label(508,249,46,up_title(v->screen),p.text,707);
     char latest[96];
