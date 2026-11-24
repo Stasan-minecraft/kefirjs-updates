@@ -10,9 +10,19 @@ This Windows installer adds KEFIRIZ OS alongside the existing KEFIRIZ Meridian g
 
 **INSTALL.bat verify** checks the files on the PC. **INSTALL.bat status E** reports the installation state of the selected card. After an interrupted install, run the installation again with the same package and card. An existing independent `lakka` directory is preserved and reported before installation.
 
+## Update from 0.1.0
+
+Extract the full 0.2.0 package on the PC and run `INSTALL.bat Install E`, using your microSD drive letter. The installer recognizes the published 0.1.0 receipt, verifies the active board files and saves the previous Linux image on the card. Allow about 3 GB of additional free space for the previous and incoming images. Leave the card connected until both images have been checked and installation completes.
+
+The upgrade replaces `lakka/SYSTEM` and `lakka/SYSTEM.md5`. It carries forward the existing Hekate menu, Meridian, Linux profiles, downloads and saves. If the current system image or board files have been modified, the installer reports the affected path. A different release manifest requires its matching installer.
+
+To return to 0.1.0 after an update, run `INSTALL.bat RollbackUpdate E`. This restores the saved Linux image and reactivates its original receipt. Rollback also works from the extracted 0.2.0 compact kit with `powershell -NoProfile -ExecutionPolicy Bypass -File .\Install.ps1 -Action RollbackUpdate -Card E`. After an interruption, `INSTALL.bat Status E` reports which operation to resume. The full `Restore` command below removes the Linux entry and archives its files.
+
 ## Boot diagnostics
 
 Open **KEFIRIZ-BOOT.bat** and select **1** for a read-only check of the Hekate entry, board-support files and six release hashes on the microSD. The command-line equivalent in the full installer is `INSTALL.bat Diagnose E`.
+
+For an installed 0.2.0 image, diagnostics also read `lakka/storage/kefiriz/session-0.2.0.txt`. The desktop writes this record after displaying its first frame on a recognized Switch board. It can document an earlier session on the same card. A fresh card or a boot interrupted before the desktop may have no record.
 
 The message **Board was not initialized properly! Hang prevented.** comes from Switchroot U-Boot during board setup on Mariko. Linux and the KEFIRIZ desktop have not started at this stage. A passing card check and this message together narrow the investigation to the earlier boot stage. A technician familiar with the console can check compatibility of its board and boot hardware with Switchroot. Meridian has a separate entry for installed Switch games. [Switchroot boot stages](https://wiki.switchroot.org/wiki/linux/linux-bootstack-documentation) · [Lakka hardware guidance](https://www.lakka.tv/doc/Nintendo-Switch/)
 

@@ -13,6 +13,9 @@ from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, ZipInfo
 HERE = Path(__file__).resolve().parent
 UPSTREAM = "Lakka-Switch.aarch64-5.0-devel-20240122151037-5f29696"
 UPSTREAM_SHA256 = "e34a6e2a8b19cb95e1b1ced10c3ef32a1c4e6a10748a4926e2a2cd6041e6daaf"
+PREVIOUS_MANIFEST = HERE / "manifest-0.1.0.json"
+PREVIOUS_SHA256 = "d9e23010429005f0b8494728bd6ffd5859eea662ff286ef0837c4127d45a97cc"
+IMAGE_PATHS = ("lakka/SYSTEM", "lakka/SYSTEM.md5")
 HARDWARE = ("KERNEL", "nx-plat.dtimg", "boot/bl31.bin", "boot/bl33.bin", "boot/boot.scr")
 ORIGINAL_ENTRY = (
     "[Lakka]\nl4t=1\nboot_prefixes=lakka/boot/\nlogopath=lakka/boot/splash.bmp\n"
@@ -86,7 +89,7 @@ def copy_regular_tree(src, dst, *, sources=False):
                 raise ValueError(f"Unsupported package input: {p}")
 
 
-def write_manifest(out, version):
+def write_manifest(out, version, previous=None):
     payload = out / "payload"
     rows, used = [], set()
     for f in sorted((payload/"lakka").rglob("*")):
@@ -100,10 +103,23 @@ def write_manifest(out, version):
             raise ValueError(f"Unsupported or colliding FAT32 filename: {name}")
         used.add(name.casefold())
         rows.append({"path": name, "size": f.stat().st_size, "sha256": digest(f)})
+    metadata = {"format": 1, "product": "KEFIRIZ OS", "version": version,
+                "upstreamArchiveSha256": UPSTREAM_SHA256,
+                "entrySha256": digest(out/"boot-entry.ini"), "files": rows}
+    if previous is not None:
+        old = json.loads(previous.read_bytes())
+        old_files = {f["path"]: f for f in old["files"]}
+        files = {f["path"]: f for f in rows}
+        if (old["version"] != "0.1.0" or version != "0.2.0" or
+                old["product"] != metadata["product"] or old["entrySha256"] != metadata["entrySha256"] or
+                old["upstreamArchiveSha256"] != UPSTREAM_SHA256 or old_files.keys() != files.keys() or
+                not set(IMAGE_PATHS) <= files.keys() or
+                any(old_files[path] != files[path] for path in files if path not in IMAGE_PATHS)):
+            raise ValueError("The in-place update requires the 0.1.0 card layout and identical board-support files.")
+        metadata["upgradeFrom"] = {"manifest": digest(previous), "version": old["version"],
+                                   "files": [old_files[p] for p in IMAGE_PATHS]}
     manifest = out / "manifest.json"
-    manifest.write_bytes((json.dumps({"format": 1, "product": "KEFIRIZ OS", "version": version,
-        "upstreamArchiveSha256": UPSTREAM_SHA256, "entrySha256": digest(out/"boot-entry.ini"), "files": rows},
-        indent=2, sort_keys=True)+"\n").encode("ascii"))
+    manifest.write_bytes((json.dumps(metadata, indent=2, sort_keys=True)+"\n").encode("ascii"))
     (out/"manifest.sha256").write_bytes((digest(manifest)+"\n").encode("ascii"))
 
 
@@ -144,7 +160,7 @@ def build(args):
         (result/"payload/lakka/storage").mkdir(exist_ok=True)
         for bmp in ("kefiriz-icon.bmp","kefiriz-logo.bmp"):
             shutil.copyfile(HERE.parent/"ui/boot"/bmp, result/"payload/lakka/boot"/bmp)
-        for name in ("Install.ps1", "Menu.ps1", "CardFiles.ps1", "Diagnose.ps1", "INSTALL.bat",
+        for name in ("Install.ps1", "Menu.ps1", "CardFiles.ps1", "Diagnose.ps1", "ImageUpdate.ps1", "INSTALL.bat",
                      "KEFIRIZ-BOOT.bat", "README.md"):
             shutil.copyfile(HERE/name, result/name)
         (result/"boot-entry.ini").write_bytes(ENTRY.encode("ascii"))
@@ -152,14 +168,17 @@ def build(args):
             (result/"source").mkdir()
             for path in args.sources:
                 copy_regular_tree(path.resolve(),result/"source"/path.resolve().name, sources=True)
-        write_manifest(result, args.version)
+        previous = PREVIOUS_MANIFEST if args.version == "0.2.0" else None
+        if previous is not None and digest(previous) != PREVIOUS_SHA256:
+            raise ValueError("The reference manifest for the published 0.1.0 installation has changed.")
+        write_manifest(result, args.version, previous)
         result.rename(out)
     print(out)
     if args.boot_tools_zip:
         with tempfile.TemporaryDirectory(prefix="kefiriz-boot-tools-") as temp:
             kit = Path(temp)
             for name in ("KEFIRIZ-BOOT.bat", "Install.ps1", "Menu.ps1", "CardFiles.ps1",
-                         "Diagnose.ps1", "boot-entry.ini", "manifest.json", "manifest.sha256", "README.md"):
+                         "Diagnose.ps1", "ImageUpdate.ps1", "boot-entry.ini", "manifest.json", "manifest.sha256", "README.md"):
                 shutil.copyfile(out / name, kit / name)
             pack_zip(kit, args.boot_tools_zip.resolve())
     if args.zip:
@@ -173,6 +192,6 @@ if __name__ == "__main__":
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--zip", type=Path)
     parser.add_argument("--boot-tools-zip", type=Path, help="Optional compact diagnostic and boot-menu kit for existing cards")
-    parser.add_argument("--version", default="0.1.0")
+    parser.add_argument("--version", default="0.2.0")
     parser.add_argument("--sources", type=Path, nargs="*", default=[], help="Optional prepared source directory trees")
     build(parser.parse_args())

@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import os
 from pathlib import Path, PurePosixPath
+import re
 import shutil
 import struct
 import subprocess
@@ -73,9 +74,11 @@ def text_file(path, content, mode=0o644):
 def configure(root, version):
     units = root / "usr/lib/systemd/system"
     tools = root / "usr/lib/kefiriz"
-    upstream = (units / "retroarch.service").read_text()
-    if "User=Lakka\nGroup=Lakka" not in upstream or "ExecStart=/usr/bin/retroarch" not in upstream:
-        raise ValueError("Unexpected upstream session service")
+    default_target = units / "default.target"
+    if (default_target.readlink() != Path("retroarch.target") or
+            not (units / "graphical.target.wants/xorg.service").is_file() or
+            not (root / "usr/bin/dock-hotplug").is_file()):
+        raise ValueError("Unexpected Switchroot graphical boot configuration")
     release = root / "etc/os-release"
     original = release.read_text()
     if 'BUILD_ID="5f29696259313f50a215bb88b1b2d5e606ab93b5"' not in original:
@@ -85,15 +88,34 @@ def configure(root, version):
     text_file(release, f'NAME="KEFIRIZ OS"\nVERSION="{version}"\nID=kefiriz\nID_LIKE="lakka libreelec"\n'
                        f'VERSION_ID="{version}"\nPRETTY_NAME="KEFIRIZ OS {version}"\n'
                        + "\n".join(retained) + "\n")
-    text_file(units / "retroarch.service.d/50-kefiriz.conf", """[Unit]
-Requires=kefiriz-storage.service
-After=kefiriz-storage.service
+    # The BSP's normal graphical target already starts Xorg and joycond. Its
+    # dock udev rule adjusts the active X11 window with xrandr and xdotool.
+    # Start our own session there without pulling in the emulator targets.
+    default_target.unlink()
+    default_target.symlink_to("graphical.target")
+    text_file(units / "kefiriz-desktop.service", """[Unit]
+Description=KEFIRIZ desktop
+Requires=xorg.service kefiriz-storage.service
+After=xorg.service fix-permissions.service kefiriz-storage.service
 Wants=kefiriz-transfers.service kefiriz-network.service
 
 [Service]
-ExecStart=
-ExecStart=/usr/lib/kefiriz/session
+User=Lakka
+Group=Lakka
+Environment=HOME=/storage DISPLAY=:0 PULSE_SERVER=127.0.0.1
+ExecStartPre=/usr/lib/kefiriz/profile-init
+ExecStartPre=/usr/bin/dock-hotplug
+ExecStart=/usr/lib/kefiriz/desktop
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=graphical.target
 """)
+    graphical = units / "graphical.target.wants"
+    (graphical / "kefiriz-desktop.service").symlink_to("../kefiriz-desktop.service")
+    if (units / "retroarch.target.wants/wii-u-gc-adapter.service").is_symlink():
+        (graphical / "wii-u-gc-adapter.service").symlink_to("../wii-u-gc-adapter.service")
     # FAT32 can supply ownership through mount options. Never recurse over a
     # pre-existing profile directory or reset user preferences on update.
     text_file(tools / "storage-setup", """#!/bin/sh
@@ -106,7 +128,7 @@ chown 1000:1000 "$target" 2>/dev/null || :
     text_file(units / "kefiriz-storage.service", """[Unit]
 Description=Prepare KEFIRIZ profile directory
 RequiresMountsFor=/storage
-Before=retroarch.service kefiriz-transfers.service
+Before=kefiriz-desktop.service kefiriz-transfers.service
 
 [Service]
 Type=oneshot
@@ -168,24 +190,35 @@ ExecStart=/usr/bin/systemctl --no-block {operation}
         (units / "multi-user.target.wants" / (unit + ".path")).symlink_to("../" + unit + ".path")
 
 
-def compile_core(args, root):
-    dst = root / "usr/lib/kefiriz/desktop.so"
+def compile_desktop(args, root):
+    lib = root / "usr/lib"
+    dst = lib / "kefiriz/desktop"
     cc = [args.cc]
     if args.clang_headers:
         cc += ["--target=aarch64-linux-gnu", "-isystem", str(args.clang_headers)]
     if args.lld:
         cc += ["-fuse-ld=" + str(args.lld)]
-    # Use the libraries in the actual target rootfs so a newer host sysroot
-    # cannot leak unavailable GLIBC symbols into the core.
+    # Link the image's exact runtime libraries. Only the ELF startup objects
+    # and C headers come from the cross toolchain.
+    if args.cross_lib:
+        crt = args.cross_lib
+    else:
+        scrt = Path(subprocess.check_output([*cc, "-print-file-name=Scrt1.o"], text=True).strip())
+        if not scrt.is_absolute() or not scrt.is_file():
+            raise ValueError("Install AArch64 libc development files or set --cross-lib")
+        crt = scrt.parent
     native = PROJECT / "native"
-    subprocess.run([*cc, "-std=gnu11", "-O2", "-fPIC", "-shared", "-nostdlib",
-                    "-march=armv8-a", "-Wl,-z,defs,-z,relro,-z,now", "-Wl,-soname,desktop.so",
-                    "-I" + str(native), str(native / "core.c"), str(native / "draw.c"),
-                    str(root / "usr/lib/libc.so.6"), str(root / "usr/lib/libm.so.6"),
+    subprocess.run([*cc, "-std=gnu11", "-O2", "-fPIE", "-pie", "-nostdlib", "-march=armv8-a",
+                    "-Wl,-z,defs,-z,relro,-z,now", "-Wl,--dynamic-linker,/lib/ld-linux-aarch64.so.1",
+                    "-Wl,-rpath-link," + str(lib), "-I" + str(native), "-idirafter", "/usr/include",
+                    crt / "Scrt1.o", crt / "crti.o", native / "desktop.c", native / "core.c",
+                    native / "draw.c", native / "desktop_input.c", lib / "libXrender.so.1", lib / "libX11.so.6",
+                    lib / "libm.so.6", lib / "libc.so.6", crt / "crtn.o",
                     "-o", str(dst)], check=True)
     data = dst.read_bytes()
-    if data[:6] != b"\x7fELF\x02\x01" or struct.unpack_from("<HH", data, 16) != (3, 183):
-        raise ValueError("Desktop core must be an AArch64 ELF shared library")
+    if (data[:6] != b"\x7fELF\x02\x01" or struct.unpack_from("<HH", data, 16) != (3, 183)
+            or struct.unpack_from("<Q", data, 24)[0] == 0):
+        raise ValueError("Desktop must be an executable AArch64 PIE with an entry point")
 
 
 def build(args):
@@ -203,9 +236,12 @@ def build(args):
         subprocess.run(["unsquashfs", "-no-progress", "-d", root, system], check=True)
         tools = root / "usr/lib/kefiriz"
         shutil.copytree(PROJECT / "runtime", tools)
-        if not (tools / "home.kfstart").is_file() or not (tools / "transfer-worker").is_file():
+        if not (tools / "VERSION").is_file() or not (tools / "transfer-worker").is_file():
             raise ValueError("Build the KEFIRIZ runtime before preparing the image")
-        if (tools / "home.kfstart").read_text().strip() != f"KEFIRIZ OS {args.version}":
+        header = (PROJECT / "native/version.h").read_text()
+        release = re.search(r'^#define\s+KF_OS_VERSION\s+"([^"\n]+)"\s*$', header, re.MULTILINE)
+        if ((tools / "VERSION").read_text().strip() != args.version or
+                not release or release[1] != args.version):
             raise ValueError("Desktop runtime version differs from the requested Linux release")
         with (tools / "transfer-worker").open("rb") as worker:
             elf = worker.read(20)
@@ -222,11 +258,8 @@ def build(args):
         licenses.symlink_to("../../lib/kefiriz/notices", target_is_directory=True)
         for filename in ("profile-init", "transfer-worker"):
             (tools / filename).chmod(0o755)
-        for name in ("session", "desktop.cfg"):
-            shutil.copyfile(PROJECT / "build" / name, tools / name)
-        (tools / "session").chmod(0o755)
         configure(root, args.version)
-        compile_core(args, root)
+        compile_desktop(args, root)
         for name in ("kefiriz-logo.bmp", "kefiriz-icon.bmp"):
             shutil.copyfile(PROJECT / "ui/boot" / name, lakka / "boot" / name)
         output = Path(work) / "SYSTEM"
@@ -248,10 +281,11 @@ if __name__ == "__main__":
     parser.add_argument("--archive", type=Path, required=True, help="Cached official Lakka TAR (fetched if missing)")
     parser.add_argument("--output", type=Path, required=True, help="New host-side FAT32 payload directory")
     parser.add_argument("--scratch", type=Path, help="Linux filesystem temporary directory, e.g. /var/tmp")
-    parser.add_argument("--version", default="0.1.0")
+    parser.add_argument("--version", default=(PROJECT / "runtime/VERSION").read_text().strip())
     parser.add_argument("--cc", default="aarch64-linux-gnu-gcc")
     parser.add_argument("--clang-headers", type=Path)
     parser.add_argument("--lld", type=Path)
+    parser.add_argument("--cross-lib", type=Path, help="AArch64 libc startup object directory")
     parser.add_argument("--jobs", type=int, default=4)
     args = parser.parse_args()
     if not (1 <= args.jobs <= 64) or not args.version or any(

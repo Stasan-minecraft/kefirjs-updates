@@ -29,12 +29,13 @@ def main():
         for folder in ("build", "native", "runtime", "transfers", "ui"):
             shutil.copytree(project / folder, source / folder, ignore=ignore)
         payload = Path(temp) / "payload"
+        version = (source / "runtime/VERSION").read_text().strip()
         py = [sys.executable, "-B", "-u"]
         subprocess.run([*py, source / "build/worker.py"], check=True)
         subprocess.run([*py, source / "build/rootfs.py", "--archive", archive, "--output",
-                        payload, "--scratch", scratch, "--cc", compiler], check=True)
+                        payload, "--scratch", scratch, "--cc", compiler, "--version", version], check=True)
         subprocess.run([*py, project / "install/prepare_release.py", "--payload", payload,
-                        "--upstream-archive", archive, "--output", output], check=True)
+                        "--upstream-archive", archive, "--output", output, "--version", version], check=True)
 
 
 if __name__ == "__main__":

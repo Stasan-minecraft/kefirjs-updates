@@ -2,9 +2,11 @@
 
 ## Separate Linux desktop for Switch
 
-**KEFIRIZ OS 0.1.0** adds a second boot option alongside Meridian. Choose KEFIRIZ OS for the English desktop, programmable buttons, Wi-Fi and background transfers. Choose Meridian for your installed Switch games. The public build kit creates a Windows installer from the official Switchroot Linux download. [Build kit and preview](https://github.com/Stasan-minecraft/kefirjs-updates/releases/tag/kefiriz-os-v0.1.0) · [Desktop source and controls](kefiriz-os/README.md)
+**KEFIRIZ OS 0.2.0 Preview** adds a standalone X11 desktop, a versioned first-run guide and R + ZR Quick settings. Choose KEFIRIZ OS for programmable HOME buttons, Wi-Fi and background transfers. Choose Meridian for your installed Switch games. The ARM64 desktop has been exercised under QEMU. Physical console acceptance is pending. [Build kit](https://github.com/Stasan-minecraft/kefirjs-updates/releases/tag/kefiriz-os-v0.2.0) · [Desktop source and controls](kefiriz-os/README.md)
 
 ## Meridian for Switch games
+
+**Ember** is an artwork update for Meridian 2.2.0 on Horizon 20.5.0. It adds a pearl-and-coral dock mark and a folded footer to native system screens. Windows builds the layouts from your own HOME export. The artwork installer can undo one revision. [Meridian Ember for Windows](https://github.com/Stasan-minecraft/kefirjs-updates/releases/tag/meridian-ember-v1)
 
 **Meridian 2.2.0** is available on **Preview** for Horizon 20.5.0 and Atmosphère 1.10.1. The Windows installer builds a new gallery and three toolbar groups into Nintendo HOME from the resources on your card. Meridian includes a custom startup framebuffer for Atmosphère, new Homebrew, System and Updater interfaces, and original icons. Basic White and Basic Black control the system background and text. [Release notes](updates/atmosphere/native/full/2.2.0/README.md) · [Windows installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.2.0/KEFIRIZ-Meridian-2.2.0.zip) · [Offline console update](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.2.0/KEFIRIZ-Meridian-2.2.0-Offline.zip)
 

@@ -1,7 +1,8 @@
-param([ValidateSet('Install','Restore','Verify','Status','BootMenu','Diagnose')][string]$Action='Install',[string]$Card)
+param([ValidateSet('Install','Restore','RollbackUpdate','Verify','Status','BootMenu','Diagnose')][string]$Action='Install',[string]$Card)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'CardFiles.ps1')
 . (Join-Path $PSScriptRoot 'Menu.ps1')
+. (Join-Path $PSScriptRoot 'ImageUpdate.ps1')
 $configFiles = @('bootloader/hekate_ipl.ini','bootloader/nyx.ini')
 $owner = '.kefiriz-dualboot-owner'
 $bundle = Join-Path $PSScriptRoot 'payload'
@@ -32,6 +33,7 @@ function ReadPackage([switch]$VerifyFiles) {
     $lines=@($entry.TrimEnd([char]13,[char]10) -split '\r?\n')
     $expected=@('[KEFIRIZ OS]','l4t=1','boot_prefixes=lakka/boot/','logopath=lakka/boot/kefiriz-logo.bmp','id=SWR-LAK','icon=lakka/boot/kefiriz-icon.bmp','bootargs_extra=nosplash')
     if ($lines.Count -ne $expected.Count -or [string]::Join("`n",$lines) -cne [string]::Join("`n",$expected)) { throw 'Unknown Linux boot entry.' }
+    if ($m.upgradeFrom) { [void]@(ImageUpdateRows $m) }
     return $m
 }
 function SetCard {
@@ -90,7 +92,8 @@ function MakeReceipt {
 }
 function ReadReceipt {
     $r=[IO.File]::ReadAllText((Child $active 'receipt.json')) | ConvertFrom-Json
-    if ($r.format -ne 1 -or $r.id -cnotmatch '^[0-9a-f]{32}$' -or $r.manifest -cne $pin -or $r.files.Count -ne 2) {
+    $supported = $r.manifest -ceq $pin -or ($manifest.upgradeFrom -and $r.manifest -ceq $manifest.upgradeFrom.manifest)
+    if ($r.format -ne 1 -or $r.id -cnotmatch '^[0-9a-f]{32}$' -or !$supported -or $r.files.Count -ne 2) {
         throw 'This installation belongs to a different package or has an invalid receipt.'
     }
     for ($i=0;$i -lt 2;$i++) {
@@ -225,6 +228,13 @@ try {
     if ($Action -eq 'Status') {
         if (![IO.Directory]::Exists($active)) { Write-Host 'KEFIRIZ OS has no active installation receipt on this card.'; exit 0 }
         $r=ReadReceipt
+        $imageUpdate = Child $active ('image-update-'+$pin)
+        if ([IO.Directory]::Exists((Child $imageUpdate 'rolling-back'))) {
+            Write-Host 'Rollback is incomplete. Run INSTALL.bat RollbackUpdate with this package.'; exit 0
+        }
+        if ($r.manifest -cne $pin -and [IO.Directory]::Exists($imageUpdate)) {
+            Write-Host 'The Linux image update is incomplete. Run INSTALL.bat Install with this package.'; exit 0
+        }
         if ((OwnsLinux $linux $r.id) -and [IO.Directory]::Exists((Child $active 'installed')) -and ![IO.Directory]::Exists((Child $active 'restoring')) -and
             [IO.File]::Exists((Child $linux 'SYSTEM')) -and (Section (MenuText (Child $Card $configFiles[0])) 'KEFIRIZ OS' -Optional)) { Write-Host 'KEFIRIZ OS and its boot menu are installed.' }
         else { Write-Host 'An installation or restoration is incomplete.' }
@@ -232,6 +242,9 @@ try {
     }
     if ($Action -eq 'Restore' -and ![IO.Directory]::Exists($active)) { Write-Host 'No KEFIRIZ OS installation to restore.'; exit 0 }
     if ($Action -eq 'BootMenu' -and ![IO.Directory]::Exists($active)) { throw 'No installed KEFIRIZ OS receipt was found.' }
+    if ($Action -eq 'RollbackUpdate' -and (!$manifest.upgradeFrom -or ![IO.Directory]::Exists($active))) {
+        throw 'No supported Linux image update is available for rollback.'
+    }
     Folder $state
     $locks=@()
     try {
@@ -239,7 +252,7 @@ try {
         $meridianLock=Child $Card 'config/kefiriz/standalone-install/operation.lock'
         if ([IO.File]::Exists($meridianLock)) { $locks+=[IO.File]::Open($meridianLock,'Open','ReadWrite','None') }
         if (![IO.Directory]::Exists($active)) {
-            if ($Action -eq 'BootMenu') { throw 'No installed KEFIRIZ OS receipt was found.' }
+            if ($Action -in @('BootMenu','RollbackUpdate')) { throw 'No installed KEFIRIZ OS receipt was found.' }
             MakeReceipt
         }
         $r=ReadReceipt
@@ -248,6 +261,12 @@ try {
         } elseif ($Action -eq 'BootMenu') {
             SetBootMenuReturn $r
             Write-Host 'KEFIRIZ OS is configured to return to the Hekate menu when Linux restarts.'
+        } elseif ($Action -eq 'RollbackUpdate') {
+            SwitchLinuxImage $r $manifest -Rollback
+        } elseif ($manifest.upgradeFrom -and ($r.manifest -cne $pin -or
+                  [IO.Directory]::Exists((Child $active ('image-update-'+$pin))))) {
+            Write-Host 'Checking the installed Linux image and its rollback files...'
+            SwitchLinuxImage $r $manifest
         } else {
             InstallLinux $r $manifest
         }

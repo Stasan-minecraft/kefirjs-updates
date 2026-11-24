@@ -32,6 +32,7 @@ def run(tmp, previews, sanitize):
     state, sysdir, net, power = [tmp / x for x in ["state", "system", "net", "power"]]
     for p in (state/"actions", sysdir/"catalog", net, power): p.mkdir(parents=True)
     (net/"status").write_text("Ready")
+    (state/"guide-0.1.0").write_text("seen\n")
     (net/"networks.tsv").write_text("wifi_1\tHome network\tpassword\tidle\n")
     sample = b"d4:infod4:name4:testee"
     (sysdir/"catalog/2048.torrent").write_bytes(sample)
@@ -71,10 +72,30 @@ def run(tmp, previews, sanitize):
         raise AssertionError(f"{p.name} did not reach expected state")
     try:
         assert host.stdout.readline().strip()=="ready"
-        assert not (state/"guide-0.1.0").exists()
+        assert not (state/"guide-0.2.0").exists()
+        shoulders = (1 << 11) | (1 << 13)
+        def hold(mask): command(f"buttons {mask}")
+        def compare_panel(image):
+            # Ignore the live clock across a minute boundary.
+            return image[1280*3*120:1280*3*625]
+        tour = compare_panel(snapshot("tour"))
+        hold(1 << 11); hold(shoulders)
+        quick = compare_panel(snapshot("quick-settings", True))
+        assert quick != tour
+        command("frames 36"); assert compare_panel(snapshot("held")) == quick
+        hold(1 << 11); hold(shoulders); hold(0)
+        assert compare_panel(snapshot("back-to-tour")) == tour
+        assert not (state/"guide-0.2.0").exists()
         press("A","A","A")
-        assert (state/"guide-0.1.0").read_text().strip()=="seen"
+        assert (state/"guide-0.2.0").read_text().strip()=="seen"
         dark=snapshot("home", True)
+        hold(1 << 13); hold(shoulders); hold(0)
+        press("Down", "A"); assert "light=1" in read_pref()
+        press("A"); assert "light=0" in read_pref()
+        press("Down", "Down", "A")
+        assert compare_panel(snapshot("quick-queue")) != quick
+        hold(shoulders); hold(0)
+        assert compare_panel(snapshot("back-to-home")) == compare_panel(dark)
         # All screenshot pixels come from the libretro video callback.
         assert dark[(240*1280+150)*3:(240*1280+150)*3+3] != dark[(15*1280+15)*3:(15*1280+15)*3+3]
         tap(752,554); settings=snapshot("settings",True);assert settings!=dark
@@ -113,7 +134,9 @@ def run(tmp, previews, sanitize):
         press("X","A"); assert (state/"active-profile").read_text().strip()=="1"
         # Join a mock Wi-Fi network through the visible keyboard. Secrets stay off disk.
         tap(752,554);tap(460,440);assert recv()==b"scan\n"
-        tap(460,314);tap(225,278);tap(318,278);tap(410,278);tap(1011,519)
+        tap(460,314);tap(225,278)
+        hold(shoulders);hold(0);press("B")
+        tap(318,278);tap(410,278);tap(1011,519)
         assert recv()==b"connect\twifi_1\t123\n"
         press("B","B")
         # Exercise both Power choices without access to any machine or console power interface.
@@ -134,7 +157,7 @@ def run(tmp, previews, sanitize):
     finally:
         if host.poll() is None:host.kill();host.wait()
         server.close()
-    print("Passed libretro guide, HOME, both themes, profiles, custom actions, dock persistence, Wi-Fi keyboard, power requests, queue and capture.")
+    print("Passed versioned guide, R + ZR in either order, HOME, both themes, profiles, custom actions, dock persistence, Wi-Fi keyboard, power requests, queue and capture.")
 
 
 if __name__ == "__main__":

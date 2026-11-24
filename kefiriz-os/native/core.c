@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include "draw.h"
 #include "libretro.h"
+#include "version.h"
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -13,6 +14,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <sys/un.h>
 #include <sys/wait.h>
 #include <time.h>
@@ -38,7 +40,8 @@ typedef enum {
     GUIDE,
     WIFI,
     KEYBOARD,
-    DETAIL
+    DETAIL,
+    QUICK
 } Page;
 typedef enum {
     NONE,
@@ -77,11 +80,16 @@ static retro_video_refresh_t video;
 static retro_input_poll_t poll_input;
 static retro_input_state_t input;
 static uint32_t frame[KZ_WIDTH * KZ_HEIGHT];
+static uint64_t frame_generation;
+uint64_t kz_frame_generation(void) { return frame_generation; }
 static KzScene scene;
 static Row rows[MAX_ROWS];
 static KzRow rendered[MAX_ROWS];
 static Item items[MAX_ITEMS];
-static Position nav[12];
+/* Keep room for Quick settings and its transfer queue above any regular window. */
+enum { REGULAR_DEPTH = 12 };
+static Position nav[REGULAR_DEPTH + 2];
+static int quick_depth;
 static int depth, item_count, row_count, tile, dock, in_dock, light, clock12, profile, slot,
     edit_dock;
 static int dirty, frames, tour_step, key_index, keyboard_mode, touch_down, touch_start,
@@ -180,7 +188,7 @@ static void load_items(void) {
             char id[80], label[80], p[PATH_MAX];
             struct stat st;
             if (pathjoin(p, sizeof p, dir, name) && lstat(p, &st) == 0 && S_ISREG(st.st_mode)) {
-                snprintf(id, sizeof id, "app/%s", name);
+                snprintf(id, sizeof id, "app/%.71s", name);
                 copy(label, sizeof label, name);
                 label[strlen(label) - 3] = 0;
                 add_item(id, label, KZ_ICON_PLAY, HOME);
@@ -257,16 +265,29 @@ static void load_prefs(void) {
 }
 static Page page(void) { return nav[depth].page; }
 static void push(Page next) {
-    if (depth + 1 < (int)(sizeof nav / sizeof nav[0]))
+    int limit = next == QUICK || quick_depth ? (int)(sizeof nav / sizeof nav[0]) : REGULAR_DEPTH;
+    if (depth + 1 < limit)
         nav[++depth] = (Position){next, 0};
     dirty = 1;
 }
 static void back(void) {
+    if (page() == QUICK)
+        quick_depth = 0;
     if (page() == KEYBOARD)
         memset(pass, 0, sizeof pass);
     if (depth)
         depth--;
     dirty = 1;
+}
+static void toggle_quick(void) {
+    if (quick_depth) {
+        int origin = quick_depth - 1;
+        while (depth > origin)
+            back();
+    } else {
+        push(QUICK);
+        quick_depth = depth;
+    }
 }
 static void note(const char *name, const char *body) {
     copy(info_title, sizeof info_title, name);
@@ -432,26 +453,40 @@ static void build(void) {
         static const char *names[] = {"B",    "Y",     "Minus",   "Plus",   "Up", "Down",
                                       "Left", "Right", "A",       "X",      "L",  "R",
                                       "ZL",   "ZR",    "L stick", "R stick"};
-        static char live[96];
-        live[0] = 0;
-        for (int i = 0; i < 16; i++)
+        char live[128] = {0};
+        for (int i = 0; i < 16; i++) {
             if (previous & (1u << i)) {
-                if (*live)
-                    strcat(live, " + ");
-                strcat(live, names[i]);
+                size_t used = strlen(live);
+                snprintf(live + used, sizeof live - used, "%s%s", used ? " + " : "", names[i]);
             }
+        }
         row("Gamepad input", *live ? live : "Ready", KZ_ICON_CONTROLLER, NONE, 0, NULL);
         row("Touch input", touch_down ? "Pressed" : "Ready", KZ_ICON_CONTROLLER, NONE, 0, NULL);
         break;
     }
     case SETTINGS:
-        window_text("Settings", "KEFIRIZ OS 0.1.0");
+        window_text("Settings", "KEFIRIZ OS " KF_OS_VERSION);
         row("Appearance", light ? "Porcelain" : "Graphite", KZ_ICON_SETTINGS, THEME, 0, NULL);
         row("Clock format", clock12 ? "12-hour" : "24-hour", KZ_ICON_SETTINGS, CLOCK, 0, NULL);
         row("Customize dock", "6 buttons", KZ_ICON_LIBRARY, OPEN, DOCK, NULL);
         row("Wi-Fi", "", KZ_ICON_NETWORK, OPEN, WIFI, NULL);
-        row("Feature guide", "0.1.0", KZ_ICON_SOFTWARE, OPEN, GUIDE, NULL);
+        row("Feature guide", KF_OS_VERSION, KZ_ICON_SOFTWARE, OPEN, GUIDE, NULL);
         break;
+    case QUICK: {
+        window_text("Quick settings", "Press R + ZR again to return to your window.");
+        row("Return", "", KZ_ICON_BACK, DO_POWER, 0, NULL);
+        row("Appearance", light ? "Porcelain" : "Graphite", KZ_ICON_SETTINGS, THEME, 0, NULL);
+        row("Clock format", clock12 ? "12-hour" : "24-hour", KZ_ICON_SETTINGS, CLOCK, 0, NULL);
+        row("Transfer queue", "", KZ_ICON_DOWNLOAD, OPEN, QUEUE, NULL);
+        struct statvfs storage;
+        if (statvfs(state, &storage) == 0) {
+            char space[48];
+            double gib = (double)storage.f_bavail * storage.f_frsize / (1024.0 * 1024.0 * 1024.0);
+            snprintf(space, sizeof space, "%.1f GiB free", gib);
+            row("Storage", space, KZ_ICON_LIBRARY, NONE, 0, NULL);
+        }
+        break;
+    }
     case DOCK:
         window_text("Customize dock", "Choose a position and assign a feature or your own action.");
         for (int i = 0; i < 6; i++) {
@@ -491,13 +526,12 @@ static void build(void) {
         row("Confirm", "", KZ_ICON_POWER, DO_POWER, 1, NULL);
         break;
     case GUIDE: {
-        static const char *heads[] = {"Welcome to KEFIRIZ OS", "Make HOME yours",
-                                      "Take it with you"};
+        static const char *heads[] = {"Welcome to KEFIRIZ " KF_OS_VERSION, "Quick settings",
+                                      "Make HOME yours"};
         static const char *texts[] = {
-            "Move with the directional buttons or touch a tile. A opens it and B takes you back.",
-            "Press Plus on a HOME tile to assign it. Customize all six dock buttons in Settings.",
-            "Y captures the screen. X changes profiles. Restart from Power to play Switch games in "
-            "Meridian."};
+            "Your desktop now runs directly on Linux. Touch a tile or press A to open it. B goes back.",
+            "Hold R and press ZR in any KEFIRIZ window to change appearance or check downloads.",
+            "Plus assigns HOME buttons. X switches profiles. Choose Power to restart into Meridian for Switch games."};
         window_text(heads[tour_step], texts[tour_step]);
         row(tour_step == 2 ? "Open HOME" : "Continue",
             tour_step == 0   ? "1 / 3"
@@ -571,6 +605,7 @@ static void show_photo(void) {
     fclose(f);
 }
 static void paint(void) {
+    ++frame_generation;
     dirty = 0;
     build();
     if (page() == PHOTO) {
@@ -716,7 +751,7 @@ static void open_item(const char *id) {
 }
 static void finish_guide(void) {
     back();
-    if (!replace_file(state, "guide-0.1.0", "seen\n"))
+    if (!replace_file(state, "guide-" KF_OS_VERSION, "seen\n"))
         note("Storage", "The guide completion could not be saved.");
 }
 static void submit_network(void) {
@@ -991,7 +1026,7 @@ void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb) { (void)cb; }
 unsigned retro_api_version(void) { return RETRO_API_VERSION; }
 void retro_get_system_info(struct retro_system_info *out) {
     *out = (struct retro_system_info){.library_name = "KEFIRIZ OS",
-                                      .library_version = "0.1.0",
+                                      .library_version = KF_OS_VERSION,
                                       .valid_extensions = "kfstart",
                                       .need_fullpath = false};
 }
@@ -1024,9 +1059,10 @@ void retro_init(void) {
     load_prefs();
     depth = tile = dock = in_dock = frames = tour_step = touch_down = 0;
     nav[0] = (Position){HOME, 0};
+    quick_depth = 0;
     previous = 0;
     dirty = 1;
-    if (!firstline(state, "guide-0.1.0", active, sizeof active))
+    if (!firstline(state, "guide-" KF_OS_VERSION, active, sizeof active) || strcmp(active, "seen"))
         open_page(GUIDE);
     enum retro_pixel_format format = RETRO_PIXEL_FORMAT_XRGB8888;
     pixel_ready = environment && environment(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &format);
@@ -1038,6 +1074,8 @@ bool retro_load_game(const struct retro_game_info *game) {
 }
 void retro_reset(void) {
     depth = 0;
+    quick_depth = 0;
+    memset(pass, 0, sizeof pass);
     dirty = 1;
 }
 void retro_run(void) {
@@ -1051,12 +1089,19 @@ void retro_run(void) {
         if (input(0, RETRO_DEVICE_JOYPAD, 0, i))
             current |= 1u << i;
     unsigned edges = current & ~previous;
+    const unsigned shoulders = (1u << RETRO_DEVICE_ID_JOYPAD_R) | (1u << RETRO_DEVICE_ID_JOYPAD_R2);
+    bool shortcut = (current & shoulders) == shoulders && (edges & shoulders);
     if (current != previous && page() == PADS)
         dirty = 1;
     previous = current;
-    press(edges);
+    if (shortcut)
+        toggle_quick();
+    else
+        press(edges);
     int down = input(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_PRESSED);
-    if (down) {
+    if (shortcut)
+        touch_start = -1;
+    else if (down) {
         int px = input(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_X),
             py = input(0, RETRO_DEVICE_POINTER, 0, RETRO_DEVICE_ID_POINTER_Y);
         int target = hit((px + 32768) * KZ_WIDTH / 65536, (py + 32768) * KZ_HEIGHT / 65536);

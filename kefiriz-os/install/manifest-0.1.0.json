@@ -1,0 +1,304 @@
+{
+  "entrySha256": "a949056bf79abd1bb8658018f7d06c9b2cd174c0a0fa59144ba14f1e7c79365e",
+  "files": [
+    {
+      "path": "lakka/boot/bl31.bin",
+      "sha256": "77b7f5c688934a4d077cd5f39ffaa57383de422652797fd2cdfad67acf41cda4",
+      "size": 45655
+    },
+    {
+      "path": "lakka/boot/bl33.bin",
+      "sha256": "96ca762188152ccf9c22cd5825afa6ae93ebcf1ca91983a12fb9e0db7dd5d746",
+      "size": 381220
+    },
+    {
+      "path": "lakka/boot/boot.scr",
+      "sha256": "d9a80aef6289050acf1d7848c50983a3110663c19532631110a740ae9d53ff57",
+      "size": 15049
+    },
+    {
+      "path": "lakka/boot/icon_lakka_hue.bmp",
+      "sha256": "02cf61409b83443fd3b51655354ecc0319870633ee5e99e4fd27fa252b09adff",
+      "size": 147512
+    },
+    {
+      "path": "lakka/boot/kefiriz-icon.bmp",
+      "sha256": "32184abbc3599f3724874710d2e71578c454e2a746df82f33afce69018e55c2f",
+      "size": 147510
+    },
+    {
+      "path": "lakka/boot/kefiriz-logo.bmp",
+      "sha256": "31691b5cca47712eaf7ae57b410255805cdfc48c5fe2d682dbc96b4da420a939",
+      "size": 3686454
+    },
+    {
+      "path": "lakka/boot/splash.bmp",
+      "sha256": "cd9227973c1b67570853eb780b28901ef140e7add96bd0b69df1192954582e28",
+      "size": 3686456
+    },
+    {
+      "path": "lakka/CHANGELOG.md",
+      "sha256": "24a65005b4067202e986c4731f250a8d291ca093cd76cb2ebcaa5cbb14f84a1e",
+      "size": 338
+    },
+    {
+      "path": "lakka/KERNEL",
+      "sha256": "3de28741f04a112e2fe7feecb25633b1bff40beb389a27cbfbddf23ee2e796aa",
+      "size": 13161707
+    },
+    {
+      "path": "lakka/KERNEL.md5",
+      "sha256": "13deadc8e093ecef92e42a3ebdec9a688606c3a768cd374d0a0a4ade94a06704",
+      "size": 47
+    },
+    {
+      "path": "lakka/licenses/7-Zip.txt",
+      "sha256": "452bed3621e073d35ee1b43ce75b9cfb8eb23d02c7b802831a2830493b66819e",
+      "size": 4103
+    },
+    {
+      "path": "lakka/licenses/Apache-2.0.txt",
+      "sha256": "67ab84426c5e2f7a0d23dfce4b7a75ee1ab3e8c88176280aaa6d6df2078c22e8",
+      "size": 10255
+    },
+    {
+      "path": "lakka/licenses/APL-1.0.txt",
+      "sha256": "9d1cace7b1b24fc61d813788e346fa2ea7df6efd78d20cbc10339733fe3b544e",
+      "size": 45958
+    },
+    {
+      "path": "lakka/licenses/APSL-2.0.txt",
+      "sha256": "72012c26c4340ed865372e43506f7647774aa10d36705f2be0487496247cf801",
+      "size": 20088
+    },
+    {
+      "path": "lakka/licenses/APSL.txt",
+      "sha256": "a77a6eca97cfff2f0f4e195f767fca773ef6b1121b5ee01fd39e00b8eac09a4a",
+      "size": 20104
+    },
+    {
+      "path": "lakka/licenses/Artistic.txt",
+      "sha256": "b7fd9b73ea99602016a326e0b62e6646060d18febdd065ceca8bb482208c3d88",
+      "size": 6111
+    },
+    {
+      "path": "lakka/licenses/ATI.txt",
+      "sha256": "4f7530540f6e1ea032746e94bd164160abdf93c15509bfb8bdbecd23bcea5c47",
+      "size": 10732
+    },
+    {
+      "path": "lakka/licenses/BSD-1-Clause.txt",
+      "sha256": "448e1e5596bb7da218037c7d94e7f90333306a2fa9f73d8bfcb4488d6635ef29",
+      "size": 1099
+    },
+    {
+      "path": "lakka/licenses/BSD-2-Clause.txt",
+      "sha256": "24a7109c41c79a79ecfc245fa0c63d60b5a3bc0a08d88a33250a22e8445c2a70",
+      "size": 1287
+    },
+    {
+      "path": "lakka/licenses/BSD-3-Clause.txt",
+      "sha256": "e11af671c491efac2f94c1d752bea92f4308ca2450c7d11e582e4b48c40e4de1",
+      "size": 1480
+    },
+    {
+      "path": "lakka/licenses/BSD-4-Clause.txt",
+      "sha256": "8419b2279acad022ba88463898858af5033a68da874a45e0a54875e24262bad2",
+      "size": 1622
+    },
+    {
+      "path": "lakka/licenses/BSL.txt",
+      "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+      "size": 1338
+    },
+    {
+      "path": "lakka/licenses/Clarified_Artistic.txt",
+      "sha256": "a95be8239dd6922a95f82a67fea7983591895bdcdf026e954912351a700e6e4b",
+      "size": 6511
+    },
+    {
+      "path": "lakka/licenses/FDL.txt",
+      "sha256": "f45cc81b400a048b56c9edbd4c3317f7a8958463dfd55aa96f268ecfd6baa12c",
+      "size": 20403
+    },
+    {
+      "path": "lakka/licenses/FDL1_2.txt",
+      "sha256": "f45cc81b400a048b56c9edbd4c3317f7a8958463dfd55aa96f268ecfd6baa12c",
+      "size": 20403
+    },
+    {
+      "path": "lakka/licenses/FDL1_3.txt",
+      "sha256": "4748f03ed2dbcc14cde6ebc30799899c403e356a7465dc30fcf2b80c45fc0059",
+      "size": 22962
+    },
+    {
+      "path": "lakka/licenses/FLIRC.txt",
+      "sha256": "4e5f12b81208b6478a807b56f674fc675c8b7ddeee0f9a6dbafcb9b6b5636634",
+      "size": 1581
+    },
+    {
+      "path": "lakka/licenses/GPL-1.0-only.txt",
+      "sha256": "37531415a2bac7f44fa1e53ca6b43c1f8fb9012634862461e9327ea48c4b6c3f",
+      "size": 12170
+    },
+    {
+      "path": "lakka/licenses/GPL-2.0-only.txt",
+      "sha256": "b58671fb4d9e9efeb9a6af1bdba02e61ac69af654855b45a372efe8f52413f83",
+      "size": 17277
+    },
+    {
+      "path": "lakka/licenses/GPL-2.0-or-later.txt",
+      "sha256": "b58671fb4d9e9efeb9a6af1bdba02e61ac69af654855b45a372efe8f52413f83",
+      "size": 17277
+    },
+    {
+      "path": "lakka/licenses/GPL-3.0-only.txt",
+      "sha256": "c7120bba88c79b87ca40eacc1cf4ac95bcb2e96b8a00dd91886ef81dbad87f33",
+      "size": 34575
+    },
+    {
+      "path": "lakka/licenses/GPL-3.0-or-later.txt",
+      "sha256": "c7120bba88c79b87ca40eacc1cf4ac95bcb2e96b8a00dd91886ef81dbad87f33",
+      "size": 34575
+    },
+    {
+      "path": "lakka/licenses/HIDAPI-orig.txt",
+      "sha256": "fb5436aa63d1b71a8dfbf74ecaf1a5b4e1ec4df7f80074d11fec99284f69ca5f",
+      "size": 264
+    },
+    {
+      "path": "lakka/licenses/Info-ZIP.txt",
+      "sha256": "8ecd6c1bab449127eb665cef1561e73a8bce52e217375f6f466939e137b1e110",
+      "size": 3412
+    },
+    {
+      "path": "lakka/licenses/ISC.txt",
+      "sha256": "a148ea3dd631cb072e24dd2cb07ff05654738351d97148120479f4a03021b2fb",
+      "size": 823
+    },
+    {
+      "path": "lakka/licenses/LGPL-2.0-only.txt",
+      "sha256": "e2eb0591a1bd9f9d49bb8c0dbbdae232b6ee9e1b2f5584617b0f2d6072464afe",
+      "size": 24782
+    },
+    {
+      "path": "lakka/licenses/LGPL-2.0-or-later.txt",
+      "sha256": "e2eb0591a1bd9f9d49bb8c0dbbdae232b6ee9e1b2f5584617b0f2d6072464afe",
+      "size": 24782
+    },
+    {
+      "path": "lakka/licenses/LGPL-2.1-only.txt",
+      "sha256": "6aee5c3d7c55f3d8ff45b1245b8427efaf0a59e9c52d7139c79bff7056e9a611",
+      "size": 25902
+    },
+    {
+      "path": "lakka/licenses/LGPL-2.1-or-later.txt",
+      "sha256": "6aee5c3d7c55f3d8ff45b1245b8427efaf0a59e9c52d7139c79bff7056e9a611",
+      "size": 25902
+    },
+    {
+      "path": "lakka/licenses/LGPL-3.0-only.txt",
+      "sha256": "18a78fc7bd236653ab5e2ff3393e3d5f20468ccc5500dc2d7b057c3f313a7b2b",
+      "size": 7356
+    },
+    {
+      "path": "lakka/licenses/LGPL-3.0-or-later.txt",
+      "sha256": "18a78fc7bd236653ab5e2ff3393e3d5f20468ccc5500dc2d7b057c3f313a7b2b",
+      "size": 7356
+    },
+    {
+      "path": "lakka/licenses/LibPNG2.txt",
+      "sha256": "bf5e22b9dce8464064ae17a48ea1133c3369ac9e1d80ef9e320e5219aa14ea9b",
+      "size": 5345
+    },
+    {
+      "path": "lakka/licenses/MIT.txt",
+      "sha256": "0c22d71ab6599696c5dabbdc3cc11ad68016d00a01efa2980538e42c9ccf73f3",
+      "size": 1078
+    },
+    {
+      "path": "lakka/licenses/MIT_Modified.txt",
+      "sha256": "ca22e431b2ab7e0b44d5a95168f99c357c13e13fe9ba49425c3d80131124d13c",
+      "size": 1082
+    },
+    {
+      "path": "lakka/licenses/MPL-1.1.txt",
+      "sha256": "4d3ae2b006ca2aee3e836a0fb1a9a7248d681eef5d0d5ee54fff6af401ad593f",
+      "size": 23399
+    },
+    {
+      "path": "lakka/licenses/MPL-2.0.txt",
+      "sha256": "ecf9b67d61451c7506e650c779dd6f9790a3cf139b21742096762c11db63a3f9",
+      "size": 14907
+    },
+    {
+      "path": "lakka/licenses/NextPVR.txt",
+      "sha256": "de289e77715e86c8490c29ca6b46b0ab49d20bc742379a9e0861781b43c0b241",
+      "size": 4119
+    },
+    {
+      "path": "lakka/licenses/NVIDIA.txt",
+      "sha256": "5af4708acc982d1d8406424d8eaa4b00eca8234372150dd4b72466b3f912bed0",
+      "size": 5725
+    },
+    {
+      "path": "lakka/licenses/OFL-1.1.txt",
+      "sha256": "1efc46eeeb84e7b62d725cfa66999c21f6f8162fe082d8ec719f19830a7ee7a6",
+      "size": 4016
+    },
+    {
+      "path": "lakka/licenses/QCA.txt",
+      "sha256": "13f2111f5ffeb749a4703563f6d2d9e6a0a1ec35bf1c20440ad46689c325f19a",
+      "size": 2192
+    },
+    {
+      "path": "lakka/licenses/Radeon_rlc.txt",
+      "sha256": "8baa4614a7da6b136cf000af09e92f558849be70d4b81f0ea54d9978db9c721e",
+      "size": 2944
+    },
+    {
+      "path": "lakka/licenses/Vim.txt",
+      "sha256": "0470074c7ce2650dd95c6fb289d82ad02b17fcb0b62b179e46e89f7411685617",
+      "size": 4435
+    },
+    {
+      "path": "lakka/licenses/Zlib.txt",
+      "sha256": "721bde10573d6e9ff1a42724b7fc240ed9f341a829d17934b507d0efef06c52a",
+      "size": 827
+    },
+    {
+      "path": "lakka/nx-plat.dtimg",
+      "sha256": "885090997e569c259fd531a79dc8f2d2268476c29746099e2e75cad92006b9fc",
+      "size": 668586
+    },
+    {
+      "path": "lakka/README.md",
+      "sha256": "de0aa6b0063086b242edab3bf709fa77ff7bb30a5bcd1b0dd3a20bbfdc7243ce",
+      "size": 1459
+    },
+    {
+      "path": "lakka/README_CONFIG.txt",
+      "sha256": "45d099928711fde59f7a1cb2963cb15862c13c7433830e874c2be4f9ef922cd8",
+      "size": 8070
+    },
+    {
+      "path": "lakka/RELEASE",
+      "sha256": "94cd84f134267a518b183ede150e70458ab5dc318216558cdda7a51261b7e2c8",
+      "size": 44
+    },
+    {
+      "path": "lakka/SYSTEM",
+      "sha256": "37bcb2ca93a79a0bc17f858fe78e7efaba9ff9f2f840c2ac0eee1ed3df317874",
+      "size": 1493716992
+    },
+    {
+      "path": "lakka/SYSTEM.md5",
+      "sha256": "64aea2640cc9c9cd43fd3f0b8951b75c27b4d02beb742a979b903965b5d2b5ca",
+      "size": 47
+    }
+  ],
+  "format": 1,
+  "product": "KEFIRIZ OS",
+  "upstreamArchiveSha256": "e34a6e2a8b19cb95e1b1ced10c3ef32a1c4e6a10748a4926e2a2cd6041e6daaf",
+  "version": "0.1.0"
+}

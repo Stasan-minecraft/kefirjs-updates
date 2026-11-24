@@ -10,7 +10,8 @@
 enum { WIDTH = 1280, HEIGHT = 720 };
 static const uint32_t *image;
 static size_t stride;
-static int button=-1, px, py, touching;
+static unsigned buttons;
+static int px, py, touching;
 
 static bool env(unsigned kind,void *data) {
     if(kind==RETRO_ENVIRONMENT_SET_PIXEL_FORMAT)
@@ -24,7 +25,7 @@ static void video(const void *data,unsigned w,unsigned h,size_t pitch) {
 static void poll_input(void) {}
 static int16_t input(unsigned port,unsigned device,unsigned index,unsigned id) {
     if(port||index)return 0;
-    if(device==RETRO_DEVICE_JOYPAD)return (int)id==button;
+    if(device==RETRO_DEVICE_JOYPAD)return id < 16 && (buttons & (1u << id)) != 0;
     if(device!=RETRO_DEVICE_POINTER)return 0;
     if(id==RETRO_DEVICE_ID_POINTER_X)return (int16_t)(((px*2+1)*32768/WIDTH)-32768);
     if(id==RETRO_DEVICE_ID_POINTER_Y)return (int16_t)(((py*2+1)*32768/HEIGHT)-32768);
@@ -59,7 +60,9 @@ int main(void) {
     while(fgets(line,sizeof line,stdin)) {
         int n,x,y;
         if(sscanf(line,"press %d",&n)==1) {
-            assert(n>=0 && n<16);button=n;retro_run();button=-1;retro_run();
+            assert(n>=0 && n<16);buttons=1u<<n;retro_run();buttons=0;retro_run();
+        } else if(sscanf(line,"buttons %d",&n)==1) {
+            assert(n>=0 && n<=65535);buttons=(unsigned)n;retro_run();
         } else if(sscanf(line,"touch %d %d",&x,&y)==2) {
             assert(x>=0 && x<WIDTH && y>=0 && y<HEIGHT);
             px=x;py=y;touching=1;retro_run();touching=0;retro_run();

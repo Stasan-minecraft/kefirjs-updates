@@ -30,10 +30,10 @@ def put(file, data):
 
 def fixture(folder):
     folder.mkdir()
-    for name in ["Install.ps1","Menu.ps1","CardFiles.ps1","Diagnose.ps1","INSTALL.bat"]:
+    for name in ["Install.ps1","Menu.ps1","CardFiles.ps1","Diagnose.ps1","ImageUpdate.ps1","INSTALL.bat"]:
         shutil.copyfile(HERE/name, folder/name)
     (folder/"boot-entry.ini").write_bytes(ENTRY.encode())
-    for name in (*HARDWARE, "SYSTEM", "boot/kefiriz-logo.bmp", "boot/kefiriz-icon.bmp", "licenses/GPL-2.0.txt"):
+    for name in (*HARDWARE, "SYSTEM", "SYSTEM.md5", "boot/kefiriz-logo.bmp", "boot/kefiriz-icon.bmp", "licenses/GPL-2.0.txt"):
         put(folder/"payload/lakka"/name, b"transaction fixture "+name.encode())
     write_manifest(folder, "0.1.0")
 
