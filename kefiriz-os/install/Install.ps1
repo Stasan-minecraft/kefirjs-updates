@@ -1,4 +1,4 @@
-param([ValidateSet('Install','Restore','Verify','Status')][string]$Action='Install',[string]$Card)
+param([ValidateSet('Install','Restore','Verify','Status','BootMenu','Diagnose')][string]$Action='Install',[string]$Card)
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'CardFiles.ps1')
 . (Join-Path $PSScriptRoot 'Menu.ps1')
@@ -73,7 +73,7 @@ function MakeReceipt {
     $mainText=MenuText (Child $Card $configFiles[0])
     $nyxText=MenuText (Child $Card $configFiles[1])
     [void](NumericConfig $nyxText 'homescreen')
-    $desired=@((PrepareMain $mainText $entry $Card),(PutConfig $nyxText 'homescreen' '2'))
+    $desired=@((PrepareMain $mainText (BootMenuEntry $entry) $Card),(PutConfig $nyxText 'homescreen' '2'))
     $id=[guid]::NewGuid().ToString('N')
     $temp=Child $state ('prepare-'+$id)
     Folder $temp
@@ -114,6 +114,25 @@ function OwnsLinux([string]$dir,[string]$id) {
     $marker=Child $dir $owner
     return ([IO.File]::Exists($marker) -and ([IO.FileInfo]$marker).Length -eq 32 -and [IO.File]::ReadAllText($marker) -ceq $id)
 }
+function SetBootMenuReturn($r) {
+    if (![IO.Directory]::Exists((Child $active 'installed')) -or [IO.Directory]::Exists((Child $active 'restoring'))) {
+        throw 'An installation or restore is incomplete. Resume it with the full installer.'
+    }
+    if (!(OwnsLinux $linux $r.id)) { throw 'This Linux directory does not belong to the active installation.' }
+    $dest = Child $Card $configFiles[0]
+    $before = HashOf $dest
+    $live = MenuText $dest
+    $desired = WithBootMenuReturn $live $entry
+    if ((HashOf $dest) -cne $before) { throw 'The Hekate menu changed during preparation.' }
+    if ($desired -ceq $live) { return }
+    $stage = Child $active ('menu-'+[guid]::NewGuid().ToString('N')+'.ini')
+    try {
+        PutMenu $stage $desired
+        Commit $stage $dest $before (HashOf $stage)
+    } finally {
+        if ([IO.File]::Exists($stage)) { [IO.File]::Delete($stage) }
+    }
+}
 function InstallLinux($r,$m) {
     if ([IO.Directory]::Exists((Child $active 'restoring'))) { throw 'A restore was interrupted. Run INSTALL.bat restore.' }
     if (Test-Path -LiteralPath $linux) {
@@ -149,7 +168,7 @@ function InstallLinux($r,$m) {
         [IO.Directory]::Move($prepared,$linux)
     }
     if ([IO.Directory]::Exists((Child $active 'installed'))) {
-        if (!(Section (MenuText (Child $Card $configFiles[0])) 'KEFIRIZ OS' -Optional)) { throw 'The installed menu was changed. Its current configuration was preserved.' }
+        SetBootMenuReturn $r
         Write-Host 'KEFIRIZ OS is already installed.'; return
     }
     # Validate both inputs before publishing either. Disable autoboot last.
@@ -158,6 +177,7 @@ function InstallLinux($r,$m) {
     }
     foreach ($i in 1,0) { ConfigCommit $i (Child $active "$i.new") $r.files[$i].before $r.files[$i].after }
     Folder (Child $active 'installed')
+    SetBootMenuReturn $r
     Write-Host 'KEFIRIZ OS is installed. Hekate opens the Launch menu with KEFIRIZ Meridian and KEFIRIZ OS.'
 }
 function RestoreLinux($r) {
@@ -197,6 +217,11 @@ try {
     $manifest = ReadPackage -VerifyFiles:($Action -in @('Install','Verify'))
     if ($Action -eq 'Verify') { Write-Host "Verified $($manifest.files.Count) KEFIRIZ OS files."; exit 0 }
     SetCard
+    if ($Action -eq 'Diagnose') {
+        . (Join-Path $PSScriptRoot 'Diagnose.ps1')
+        TestBootFiles $manifest
+        exit 0
+    }
     if ($Action -eq 'Status') {
         if (![IO.Directory]::Exists($active)) { Write-Host 'KEFIRIZ OS has no active installation receipt on this card.'; exit 0 }
         $r=ReadReceipt
@@ -206,15 +231,26 @@ try {
         exit 0
     }
     if ($Action -eq 'Restore' -and ![IO.Directory]::Exists($active)) { Write-Host 'No KEFIRIZ OS installation to restore.'; exit 0 }
+    if ($Action -eq 'BootMenu' -and ![IO.Directory]::Exists($active)) { throw 'No installed KEFIRIZ OS receipt was found.' }
     Folder $state
     $locks=@()
     try {
         $locks+=[IO.File]::Open((Child $state 'operation.lock'),'OpenOrCreate','ReadWrite','None')
         $meridianLock=Child $Card 'config/kefiriz/standalone-install/operation.lock'
         if ([IO.File]::Exists($meridianLock)) { $locks+=[IO.File]::Open($meridianLock,'Open','ReadWrite','None') }
-        if (![IO.Directory]::Exists($active)) { MakeReceipt }
+        if (![IO.Directory]::Exists($active)) {
+            if ($Action -eq 'BootMenu') { throw 'No installed KEFIRIZ OS receipt was found.' }
+            MakeReceipt
+        }
         $r=ReadReceipt
-        if ($Action -eq 'Restore') { RestoreLinux $r } else { InstallLinux $r $manifest }
+        if ($Action -eq 'Restore') {
+            RestoreLinux $r
+        } elseif ($Action -eq 'BootMenu') {
+            SetBootMenuReturn $r
+            Write-Host 'KEFIRIZ OS is configured to return to the Hekate menu when Linux restarts.'
+        } else {
+            InstallLinux $r $manifest
+        }
     } finally { foreach ($lock in $locks) { $lock.Dispose() } }
 } catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 }
 exit 0

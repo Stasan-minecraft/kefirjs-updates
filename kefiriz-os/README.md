@@ -27,6 +27,8 @@ Place .torrent files in **inbox**. Completed files live under **downloads** in a
 
 ## Install and restore
 
+For the startup message **Board was not initialized properly! Hang prevented.**, use the Windows boot tools to check the card and identify the stage that stopped. The same tools configure a normal restart from Linux back to Hekate. [Boot diagnostics](install/README.md#boot-diagnostics)
+
 The Windows release contains **INSTALL.bat** and a verified FAT32 payload. Open it from the extracted **KEFIRIZ-OS-0.1.0** directory. Its install, status, verify and restore commands are documented in the [installer guide](install/README.md). Installation uses files on the existing FAT32 volume. To boot the original menu configuration again, run `INSTALL.bat restore E` from that package, substituting the card's actual letter. Restore preserves the Linux data in an archive directory on the card.
 
 ## Build

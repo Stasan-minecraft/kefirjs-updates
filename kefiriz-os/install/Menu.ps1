@@ -50,6 +50,27 @@ function OsBlock([string]$text,[string]$entry) {
     $nl = Newline $text
     return (($entry.TrimEnd([char]13,[char]10) -split '\r?\n') -join $nl)+$nl
 }
+function BootMenuEntry([string]$entry) {
+    $nl = Newline $entry
+    return $entry.TrimEnd([char]13,[char]10) + $nl + 'r2p_action=bootloader' + $nl
+}
+function ManagedOsBlock([string]$text,[string]$entry) {
+    $os = Section $text 'KEFIRIZ OS'
+    $desired = OsBlock $os.Body (BootMenuEntry $entry)
+    $legacy = OsBlock $os.Body $entry
+    foreach ($block in @($desired,$legacy)) {
+        if ($os.Body.StartsWith($block,[StringComparison]::Ordinal) -and
+            !$os.Body.Substring($block.Length).Trim().Length) {
+            return [pscustomobject]@{Start=$os.Start;Block=$block;Desired=$desired}
+        }
+    }
+    throw 'The KEFIRIZ OS boot entry has been edited. Its current configuration was preserved.'
+}
+function WithBootMenuReturn([string]$text,[string]$entry) {
+    $managed = ManagedOsBlock $text $entry
+    if ($managed.Block -ceq $managed.Desired) { return $text }
+    return $text.Remove($managed.Start,$managed.Block.Length).Insert($managed.Start,$managed.Desired)
+}
 function PrepareMain([string]$text,[string]$entry,[string]$card) {
     if ((Section $text 'KEFIRIZ OS' -Optional) -or (Section $text 'KEFIRIZ Meridian' -Optional)) { throw 'An independent KEFIRIZ boot menu entry already exists.' }
     $games = Section $text 'KEFIRIZ'
@@ -78,17 +99,13 @@ function MergeMenuRestore([string]$text,[string]$original,[string]$installed,[st
         if ((NumericConfig $text 'homescreen') -ceq '2') { return PutConfig $text 'homescreen' (NumericConfig $original 'homescreen') }
         return $text
     }
-    $os = Section $text 'KEFIRIZ OS'
-    $block = OsBlock $text $entry
-    if (!$os.Body.StartsWith($block,[StringComparison]::Ordinal) -or $os.Body.Substring($block.Length).Trim().Length) {
-        throw 'The KEFIRIZ OS boot entry has been edited. Preserve the card and restore its managed entry before retrying.'
-    }
+    $os = ManagedOsBlock $text $entry
     $boot = [int](NumericConfig $text 'autoboot')
     if ($boot -and (NumericConfig $text 'autoboot_list') -ceq '0') {
         $before = [regex]::Matches($text.Substring(0,$os.Start),'(?m)^\[(?!config\])[^\]\r\n]+\][ \t]*(?=\r?$)').Count
         if ($boot -eq $before+1) { $boot=0 } elseif ($boot -gt $before+1) { $boot-- }
     } elseif (!$boot) { $boot=[int](NumericConfig $original 'autoboot') }
-    $text = $text.Remove($os.Start,$block.Length)
+    $text = $text.Remove($os.Start,$os.Block.Length)
     $games = Section $text 'KEFIRIZ Meridian' -Optional
     if ($games -and !(Section $text 'KEFIRIZ' -Optional)) { $text=$text.Remove($games.TitleStart,'KEFIRIZ Meridian'.Length).Insert($games.TitleStart,'KEFIRIZ') }
     return PutConfig $text 'autoboot' ([string]$boot)

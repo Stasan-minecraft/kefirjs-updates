@@ -144,7 +144,8 @@ def build(args):
         (result/"payload/lakka/storage").mkdir(exist_ok=True)
         for bmp in ("kefiriz-icon.bmp","kefiriz-logo.bmp"):
             shutil.copyfile(HERE.parent/"ui/boot"/bmp, result/"payload/lakka/boot"/bmp)
-        for name in ("Install.ps1", "Menu.ps1", "CardFiles.ps1", "INSTALL.bat", "README.md"):
+        for name in ("Install.ps1", "Menu.ps1", "CardFiles.ps1", "Diagnose.ps1", "INSTALL.bat",
+                     "KEFIRIZ-BOOT.bat", "README.md"):
             shutil.copyfile(HERE/name, result/name)
         (result/"boot-entry.ini").write_bytes(ENTRY.encode("ascii"))
         if args.sources:
@@ -154,6 +155,13 @@ def build(args):
         write_manifest(result, args.version)
         result.rename(out)
     print(out)
+    if args.boot_tools_zip:
+        with tempfile.TemporaryDirectory(prefix="kefiriz-boot-tools-") as temp:
+            kit = Path(temp)
+            for name in ("KEFIRIZ-BOOT.bat", "Install.ps1", "Menu.ps1", "CardFiles.ps1",
+                         "Diagnose.ps1", "boot-entry.ini", "manifest.json", "manifest.sha256", "README.md"):
+                shutil.copyfile(out / name, kit / name)
+            pack_zip(kit, args.boot_tools_zip.resolve())
     if args.zip:
         pack_zip(out, args.zip.resolve())
 
@@ -164,6 +172,7 @@ if __name__ == "__main__":
     parser.add_argument("--upstream-archive", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--zip", type=Path)
+    parser.add_argument("--boot-tools-zip", type=Path, help="Optional compact diagnostic and boot-menu kit for existing cards")
     parser.add_argument("--version", default="0.1.0")
     parser.add_argument("--sources", type=Path, nargs="*", default=[], help="Optional prepared source directory trees")
     build(parser.parse_args())
