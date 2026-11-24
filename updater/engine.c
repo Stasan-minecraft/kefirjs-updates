@@ -5,6 +5,7 @@
 #include "crypto/monocypher-ed25519.h"
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -17,6 +18,7 @@
 #endif
 #define OTA SD KF_OTA
 #define PREP OTA "/preparing"
+#define PREVIEW_CHOICE OTA "/preview-selected"
 #define ACTIVE OTA "/active"
 #define OFFLINE SD "config/kefirjs/offline/"
 #define MARKER "config/kefiriz/release.txt"
@@ -24,9 +26,13 @@
 #define PROFILE_DIR "atmosphere/contents/42000000004B4650"
 #define TRANSFER_DIR "atmosphere/contents/42000000004B4654"
 #define PROFILE_MODULE PROFILE_DIR "/exefs.nsp"
+#define PROFILE_FLAG SD PROFILE_DIR "/flags/boot2.flag"
+#define AURORA_PROFILES "90d294b6c7edda4492aea5698acf263840211c0cb4cd4aacbaf4900e851c7a4a"
+#define AURORA_TRANSFERS "cc26b4bbce60969f650ce3c543ab612f299f20864fd7d4c78029159dcb4fb117"
 #define TRANSFER_MODULE TRANSFER_DIR "/exefs.nsp"
 #define PARKED SD "config/kefiriz/profile-recovery/"
 #define SYSAPP "switch/KEFIRIZ-System/KEFIRIZ-System.nro"
+#define NXTHEMES "switch/NxThemesInstaller/NxThemesInstaller.nro"
 #define MAX_BLOB (32u * 1024u * 1024u)
 #define MAX_FEED 8192u
 #define COUNT(x) (sizeof(x) / sizeof((x)[0]))
@@ -37,6 +43,9 @@ static const char *const allowed[] = {
 };
 static const struct { const char *path, *hashes; } retired[] = {
 #include "retired.inc"
+#ifdef KF_ATMOSPHERE_EDITION
+    {NXTHEMES, "36ac0fac5477e08a176b2f155b8b3c170c1291004d943541348599bae8cf97a1"},
+#endif
 };
 enum { MAX_ROWS = COUNT(allowed) + COUNT(retired) };
 typedef struct { const char *path; unsigned size; char sha[65]; } Asset;
@@ -44,6 +53,7 @@ typedef struct {
     char version[24], notes[1024];
     Asset files[COUNT(allowed)];
     size_t count, bytes;
+    bool preview;
 } Manifest;
 typedef struct { const char *path; char old[65], next[65]; } Row;
 typedef struct { Row rows[MAX_ROWS]; size_t count; } Journal;
@@ -163,6 +173,10 @@ static bool parse(const Buffer *input, Manifest *m) {
     if (!line || strcmp(line, "base\t" KF_BASE)) return false;
     unsigned notes = 0;
     while ((line = next_line(&cursor))) {
+        if (!strcmp(line, "channel\tpreview") && !notes && !m->count && !m->preview) {
+            m->preview = true;
+            continue;
+        }
         char *f[4];
         size_t n = columns(line, f, COUNT(f));
         if (n == 2 && !strcmp(f[0], "note") && !m->count && ++notes <= 8) {
@@ -220,9 +234,16 @@ static bool read_marker(const char *path, char out[24]) {
     if (!version(line + 8, v)) return false;
     strcpy(out, line + 8); return true;
 }
+static bool preview_selected(void) {
+    struct stat st;
+    return !stat(PREVIEW_CHOICE, &st) && S_ISDIR(st.st_mode);
+}
 void kf_local(KfUpdate *u) {
     memset(u, 0, sizeof(*u));
+    u->preview = preview_selected();
     if (!read_marker(SD MARKER, u->current)) strcpy(u->current, "Unknown");
+    struct stat st;
+    u->profiles_off = !strcmp(u->current, "2.1.0") && stat(PROFILE_FLAG, &st) != 0 && errno == ENOENT;
 }
 static void offline_payload(char path[256], const Manifest *m) {
     snprintf(path, 256, OFFLINE KF_UPDATES "/%s/update.bin", m->version);
@@ -240,19 +261,22 @@ int kf_check(KfUpdate *u, KfProgress cb, void *ctx) {
         return fail(u, "Install KEFIRIZ " KF_EDITION " with the Windows installer first.");
 
     // A complete, newer offline release can be installed with Wi-Fi turned off.
-    const char *local_path = OFFLINE KF_UPDATES "/stable.kfu";
+    const char *feed_path = u->preview ? KF_UPDATES "/preview.kfu" : KF_UPDATES "/stable.kfu";
+    char local_path[256];
+    snprintf(local_path, sizeof(local_path), OFFLINE "%s", feed_path);
     Buffer local = {0};
     Manifest local_release, verified;
     bool local_read = from_file(local_path, mem_sink, &local, MAX_FEED);
-    bool local_valid = local_read && parse(&local, &local_release);
+    bool local_valid = local_read && parse(&local, &local_release) && (!local_release.preview || u->preview);
     if (local_valid && compare(u->current, local_release.version) < 0 && payload_present(&local_release)) {
         offline = true;
         signed_feed = local;
         verified = local_release;
     } else {
         if (cb) cb("Checking GitHub", 0, 0, ctx);
-        if (kf_fetch(KF_UPDATES "/stable.kfu", mem_sink, &signed_feed, MAX_FEED, NULL, NULL)) {
-            if (!parse(&signed_feed, &verified)) return fail(u, "The online update signature or release format is invalid.");
+        if (kf_fetch(feed_path, mem_sink, &signed_feed, MAX_FEED, NULL, NULL)) {
+            if (!parse(&signed_feed, &verified) || (verified.preview && !u->preview))
+                return fail(u, "The online signature, channel or release format is invalid.");
         } else {
             const char *reason = kf_network_error();
             if (local_valid && compare(u->current, local_release.version) >= 0) {
@@ -303,6 +327,13 @@ static bool parents(const char *path) {
     return true;
 }
 static bool gone(const char *path) { return remove(path) == 0 || errno == ENOENT; }
+bool kf_set_preview(bool enabled) {
+    if (!parents(OTA "/operation.lock") || !kf_lock()) return false;
+    bool ok = enabled ? folder(PREVIEW_CHOICE) : (rmdir(PREVIEW_CHOICE) == 0 || errno == ENOENT);
+    if (ok) selection.count = 0;
+    kf_unlock();
+    return ok;
+}
 static bool regular_hash(const char *path, char out[65]) {
     FILE *in = fopen(path, "rb");
     if (!in) { if (errno == ENOENT) { strcpy(out, "-"); return true; } return false; }
@@ -310,12 +341,12 @@ static bool regular_hash(const char *path, char out[65]) {
     fclose(in); return ok;
 }
 static const struct {
-    const char *module, *dir, *pending, *fixed_sha;
+    const char *module, *dir, *pending, *previous_sha, *current_sha;
 } services[] = {
     {PROFILE_MODULE, SD PROFILE_DIR, PARKED "profiles/pending/boot2.flag",
-     "67769c52f767bef031889baae7f65d767e9eb8c79514f2c93c375d50056c2346"},
+     "67769c52f767bef031889baae7f65d767e9eb8c79514f2c93c375d50056c2346", AURORA_PROFILES},
     {TRANSFER_MODULE, SD TRANSFER_DIR, PARKED "transfer/pending/boot2.flag",
-     "02dd442cfd441675f54a4e78d38ad410027cd991b15abfb71ef8ec1034af2037"}
+     "02dd442cfd441675f54a4e78d38ad410027cd991b15abfb71ef8ec1034af2037", AURORA_TRANSFERS}
 };
 static bool has_saved_flag(void) {
     struct stat st;
@@ -343,9 +374,9 @@ static void restore_saved_flags(const Manifest *m) {
         if (stat(services[i].pending, &st) || !S_ISREG(st.st_mode)) continue;
         for (size_t j = 0; j < m->count; j++) {
             if (strcmp(m->files[j].path, services[i].module) ||
-                strcmp(m->files[j].sha, services[i].fixed_sha)) continue;
+                (strcmp(m->files[j].sha, services[i].previous_sha) && strcmp(m->files[j].sha, services[i].current_sha))) continue;
             snprintf(path, sizeof(path), SD "%s", services[i].module);
-            if (!regular_hash(path, hex) || strcmp(hex, services[i].fixed_sha)) break;
+            if (!regular_hash(path, hex) || strcmp(hex, m->files[j].sha)) break;
             const char *const disabled[] = {".off", "/flags.off", "/exefs.nsp.off"};
             bool available = true;
             for (size_t k = 0; k < COUNT(disabled); k++) {
@@ -372,6 +403,30 @@ static bool has_receipt(const char *version_text, char path[256]) {
 static bool is_base(void) {
     char hex[65];
     return kf_horizon_ok() && regular_hash(SD "atmosphere/package3", hex) && !strcmp(hex, KF_BASE_HASH);
+}
+bool kf_enable_profiles(void) {
+    if (!is_base() || !parents(OTA "/operation.lock") || !kf_lock()) return false;
+    struct stat st;
+    char digest[65], version_text[24];
+    bool ok = stat(ACTIVE, &st) && errno == ENOENT && read_marker(SD MARKER, version_text)
+        && !strcmp(version_text, "2.1.0") && regular_hash(SD PROFILE_MODULE, digest)
+        && !strcmp(digest, AURORA_PROFILES) && stat(SD PROFILE_DIR "/flags.off", &st) && errno == ENOENT
+        && stat(PROFILE_FLAG, &st) && errno == ENOENT && parents(PROFILE_FLAG);
+    if (ok) {
+        const char *sources[] = {PROFILE_FLAG ".off", PARKED "profiles/pending/boot2.flag"};
+        bool moved = false;
+        for (size_t i = 0; ok && !moved && i < COUNT(sources); ++i) {
+            if (stat(sources[i], &st)) { ok = errno == ENOENT; continue; }
+            ok = S_ISREG(st.st_mode) && rename(sources[i], PROFILE_FLAG) == 0;
+            moved = ok;
+        }
+        if (ok && !moved) {
+            int fd = open(PROFILE_FLAG, O_CREAT | O_EXCL | O_WRONLY, 0666);
+            ok = fd >= 0 && close(fd) == 0;
+        }
+    }
+    kf_unlock();
+    return ok;
 }
 static void member(char out[256], const char *dir, const char *kind, size_t index) {
     snprintf(out, 256, "%s/%s-%02u.bin", dir, kind, (unsigned)index);
@@ -542,6 +597,7 @@ static bool prepare(FILE *blob, const Manifest *m, Journal *j, const char *curre
         const Asset *a = &m->files[i];
         if (i == m->count - 1) {
             for (size_t k = 0; k < COUNT(retired); k++) {
+                if (!strcmp(retired[k].path, NXTHEMES) && compare(m->version, "2.1.0") < 0) continue;
                 snprintf(target, sizeof(target), SD "%s", retired[k].path);
                 if (!regular_hash(target, old)) return false;
                 if (!obsolete(retired[k].path, old)) continue;
@@ -556,10 +612,12 @@ static bool prepare(FILE *blob, const Manifest *m, Journal *j, const char *curre
            builds under either ID intact, even when the feed is authentic. */
         if (strcmp(old, "-") && strcmp(old, a->sha)) {
             if (!strcmp(a->path, PROFILE_MODULE) &&
-                strcmp(old, "61aff6623d884cab86a2d7041b66ffeaa27092af8c467cc928ec6cb471e928ee") && strcmp(old, "b0e562b0104617a2b743adb64deec7de2d6122a76afd5efd06d1b26635a74c87")) return false;
+                strcmp(old, "61aff6623d884cab86a2d7041b66ffeaa27092af8c467cc928ec6cb471e928ee") && strcmp(old, "b0e562b0104617a2b743adb64deec7de2d6122a76afd5efd06d1b26635a74c87") &&
+                strcmp(old, "67769c52f767bef031889baae7f65d767e9eb8c79514f2c93c375d50056c2346")) return false;
             if (!strcmp(a->path, TRANSFER_MODULE) &&
                 strcmp(old, "c4922de663e7b7854f474bac058690995238184aba55fc1d4a8d54791c205193") &&
-                strcmp(old, "e1e6824a79658aa924dfa94b5099734923f1d3ebf5d3f45ec7af952d8d3af4bc")) return false;
+                strcmp(old, "e1e6824a79658aa924dfa94b5099734923f1d3ebf5d3f45ec7af952d8d3af4bc") &&
+                strcmp(old, "02dd442cfd441675f54a4e78d38ad410027cd991b15abfb71ef8ec1034af2037")) return false;
         }
         if (!strcmp(current, "1.1.0") && !strcmp(a->path, "hbmenu.nro") && strcmp(old, a->sha) &&
             strcmp(old, "d89d0a70d4844ac43b1d57e65b3787acc9255658f9ec4bf875bec0bee6a28c1d")) return false;
@@ -580,6 +638,7 @@ static bool prepare(FILE *blob, const Manifest *m, Journal *j, const char *curre
     return fgetc(blob) == EOF && !ferror(blob);
 }
 static int apply_locked(KfUpdate *u, KfProgress cb, void *ctx) {
+    if (u->preview != preview_selected()) return fail(u, "The channel changed. Check for updates again.");
     if (!selection.count || strcmp(u->latest, selection.version)) return fail(u, "Check for an update before installing.");
     struct stat st;
     if (!stat(ACTIVE, &st) || errno != ENOENT) return fail(u, "Reopen the updater to recover the previous transaction.");
@@ -615,7 +674,7 @@ static int apply_locked(KfUpdate *u, KfProgress cb, void *ctx) {
     f = fopen(PREP "/originals.tsv", "wb");
     if (!f || !close_out(f, record(f, &j)) || rename(PREP, ACTIVE))
         return fail(u, "The card could not save the update journal.");
-    if (!commit(&j, &selection, cb, ctx)) return fail(u, "Update interrupted. Reopen KEFIRJS Updater to resume or use the Windows installer.");
+    if (!commit(&j, &selection, cb, ctx)) return fail(u, "Update interrupted. Reopen KEFIRIZ Updater to resume or use the Windows installer.");
     selection.count = 0; kf_local(u); strcpy(u->message, "Update installed. Return to HOME to continue.");
     return KF_APPLIED;
 }

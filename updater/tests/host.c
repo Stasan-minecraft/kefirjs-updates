@@ -109,6 +109,9 @@ static void tick(const char *phase, uint64_t done, uint64_t total, void *user) {
 }
 int main(int argc, char **argv) {
     if (argc != 2) return 2;
+    if (!strcmp(argv[1], "enable-profiles")) return kf_enable_profiles() ? 0 : 1;
+    if (!strcmp(argv[1], "preview") || !strcmp(argv[1], "stable"))
+        return kf_set_preview(!strcmp(argv[1], "preview")) ? 0 : 1;
     KfUpdate u;
     int rc = kf_recover(&u, tick, NULL);
     if (!strcmp(argv[1], "recover")) goto print;

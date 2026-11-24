@@ -6,9 +6,11 @@
 int main(void) {
     UpView v={.screen=UP_READY,.compatible=true};
     assert(up_input(&v,UP_PRIMARY)==UP_CHECK);
+    assert(up_input(&v,UP_CHANNEL)==UP_SWITCH_CHANNEL && up_touch(367,648)==UP_CHANNEL);
     for (int r=0;r<2;r++) {
         v.screen=r?UP_INSTALLING:UP_CHECKING;
         assert(up_input(&v,UP_BACK)==UP_NONE && up_input(&v,UP_PRIMARY)==UP_NONE);
+        assert(up_input(&v,UP_CHANNEL)==UP_NONE);
     }
     up_result(&v,KF_AVAILABLE);
     strcpy(v.release.current,"1.1.0");
@@ -19,6 +21,7 @@ int main(void) {
     assert(up_input(&v,UP_NEXT)==UP_NONE && v.page==1);
     assert(up_input(&v,UP_PREVIOUS)==UP_NONE && !v.page);
     assert(up_input(&v,UP_PRIMARY)==UP_NONE && v.screen==UP_CONFIRM);
+    assert(up_input(&v,UP_CHANNEL)==UP_NONE);
     assert(up_input(&v,UP_BACK)==UP_NONE && v.screen==UP_AVAILABLE);
     assert(up_input(&v,UP_PRIMARY)==UP_NONE && v.screen==UP_CONFIRM);
     assert(up_input(&v,UP_PRIMARY)==UP_APPLY);

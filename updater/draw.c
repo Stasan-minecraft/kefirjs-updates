@@ -107,9 +107,9 @@ void up_draw(uint32_t *pixels,int stride,const UpView *v) {
     Palette p=colors(v->dark);
     rect(0,0,UP_WIDTH,UP_HEIGHT,p.paper);
     rect(54,42,7,24,p.accent);
-    label(75,63,27,"KEFIRJS",p.text,148);
-    label(1043,63,24,"Stable channel",p.muted,182);
-    label(50,147,68,"Firmware updater",p.text,1190);
+    label(75,63,27,"KEFIRIZ",p.text,148);
+    label(1043,63,24,v->release.preview?"Preview channel":"Stable channel",p.muted,182);
+    label(50,147,68,"KEFIRIZ Updater",p.text,1190);
     rect(53,178,1171,1,p.rule);
 
     rounded(53,212,415,347,18,p.card);
@@ -160,6 +160,16 @@ void up_draw(uint32_t *pixels,int stride,const UpView *v) {
     rect(53,590,1171,1,p.rule);
     if (!up_busy(v->screen)) {
         key(55,616,"B",v->screen==UP_CONFIRM?"Back":"Close",p);
+        if (v->screen!=UP_CONFIRM) {
+            rounded(296,616,32,31,7,p.rule);
+            label(305,640,22,"X",p.text,21);
+            label(338,640,27,"Switch channel",p.muted,218);
+            if (v->release.profiles_off && v->compatible) {
+                rounded(587,616,32,31,7,p.rule);
+                label(596,640,22,"Y",p.text,21);
+                label(629,640,27,"Enable R + ZR",p.muted,222);
+            }
+        }
         if (v->screen!=UP_AVAILABLE || v->compatible) {
             rounded(897,606,324,65,12,p.button);
             label(926,649,27,"A",p.on_button,26);

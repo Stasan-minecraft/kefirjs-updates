@@ -1,0 +1,5 @@
+Aurora: first-boot guide on HOME, with replay in Homebrew Favorites.
+R + ZR opens the current preset. Release both and press again within five seconds to cycle.
+KEFIRIZ Updater remembers Stable or Preview. Disabled Aurora Profiles can be enabled with Y.
+Replace the bundled NXThemes Installer with KEFIRIZ Guide. Use X for all apps or + for classic Homebrew.
+Aurora artwork for Hekate and kernel wake notifications for background Homebrew downloads.

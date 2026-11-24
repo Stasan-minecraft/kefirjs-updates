@@ -1,4 +1,4 @@
-"""Build the KEFIRJS Updater homebrew NRO with devkitPro/libnx and Pillow."""
+"""Build the KEFIRIZ Updater homebrew NRO with devkitPro/libnx and Pillow."""
 import argparse
 from hashlib import sha256
 import os
@@ -59,8 +59,9 @@ def main():
             flags.append("-DKF_ATMOSPHERE_EDITION")
         subprocess.run([cc, *flags, *sources, "-o", "updater.elf", "-lnx", "-lm"],
                        env=env, cwd=work, check=True)
-        subprocess.run([tools / ("nacptool" + suffix), "--create", "KEFIRJS Updater", "KEFIRJS",
-                        "2.0.2" if args.atmosphere_edition else "1.2.2", "updater.nacp"], cwd=work, check=True)
+        name = "KEFIRIZ Updater"
+        subprocess.run([tools / ("nacptool" + suffix), "--create", name, "KEFIRIZ",
+                        "2.1.0" if args.atmosphere_edition else "1.2.3", "updater.nacp"], cwd=work, check=True)
         subprocess.run([tools / ("elf2nro" + suffix), "updater.elf", "updater.nro",
                         "--icon=icon.jpg", "--nacp=updater.nacp"], cwd=work, check=True)
         binary = (work / "updater.nro").read_bytes()
@@ -68,7 +69,7 @@ def main():
         magic, asset_version, icon_pos, icon_len, nacp_pos, nacp_len = struct.unpack_from("<4sI4Q", binary, aset)
         if (binary[16:20] != b"NRO0" or magic != b"ASET" or asset_version != 0 or
                 binary[aset + icon_pos:aset + icon_pos + icon_len] != (work / "icon.jpg").read_bytes() or
-                nacp_len != 0x4000 or binary[aset + nacp_pos:aset + nacp_pos + 15] != b"KEFIRJS Updater"):
+                nacp_len != 0x4000 or binary[aset + nacp_pos:aset + nacp_pos + len(name)] != name.encode("ascii")):
             raise ValueError("Invalid NRO or missing updater name and icon")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=args.output.parent, delete=False) as stage:

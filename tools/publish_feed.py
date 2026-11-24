@@ -42,6 +42,7 @@ def main():
     cli.add_argument("--public-header", type=Path, required=True)
     cli.add_argument("--atmosphere-edition", action="store_true", help="Use the independent Atmosphere channel and archive")
     cli.add_argument("--native", action="store_true", help="Sign the native service repair channel")
+    cli.add_argument("--channel", choices=("stable", "preview"), default="stable")
     cli.add_argument("--initialize", action="store_true")
     cli.add_argument("--archive", type=Path)
     cli.add_argument("--version")
@@ -86,6 +87,10 @@ def main():
     if independent and not args.native and args.output.name != "atmosphere":
         raise ValueError("Select updates/atmosphere for this independent channel")
     body = ["KEFIRJS-UPDATE-1", "version\t" + args.version, "base\t" + base]
+    if args.channel == "preview":
+        if not args.native:
+            raise ValueError("Preview requires a channel-aware native client")
+        body.append("channel\tpreview")
     body.extend("note\t" + note for note in notes)
     data = bytearray()
     with ZipFile(args.archive) as pack:
@@ -99,6 +104,11 @@ def main():
         baseline = json.loads(Path(__file__).with_name("base-atmosphere-2.0.0.json" if independent else "base-1.1.0.json").read_text("ascii"))
         changed = {name for name in baseline.keys() | entries.keys()
                    if baseline.get(name) != entries.get(name, {}).get("sha256")}
+        removed_theme_app = "switch/NxThemesInstaller/NxThemesInstaller.nro"
+        if (independent and args.native and tuple(map(int, args.version.split("."))) >= (2,1,0)
+                and removed_theme_app not in entries and baseline.get(removed_theme_app) ==
+                "36ac0fac5477e08a176b2f155b8b3c170c1291004d943541348599bae8cf97a1"):
+            changed.discard(removed_theme_app)
         if changed.difference(files):
             raise ValueError("The native client needs support for these additional changes: " +
                              ", ".join(sorted(changed.difference(files))))
@@ -113,7 +123,7 @@ def main():
             body.append(f"file\t{name}\t{size}\t{digest}")
         standalone = pack.read(root + "sd/" + FILES[1])
         rescue = {name: pack.read(root + "sd/" + name)
-                  for name in files if args.native and name.endswith("/exefs.nsp")}
+                  for name in files if args.native and args.channel == "stable" and name.endswith("/exefs.nsp")}
     content = ("\n".join(body) + "\n").encode("ascii")
     envelope = b"KEFIRJS-SIGNED-1\n" + key.sign(content).hex().encode() + b"\n" + content
     folder = args.output / args.version
@@ -123,9 +133,10 @@ def main():
         if path.exists() and path.read_bytes() != value:
             raise ValueError("Use a new version for changed release files: " + name)
         path.write_bytes(value)
-    (args.output / "stable.kfu").write_bytes(envelope)
+    feed_name = args.channel + ".kfu"
+    (args.output / feed_name).write_bytes(envelope)
     if args.offline_zip:
-        members = {FILES[1]: standalone, f"config/kefirjs/offline/{channel}/stable.kfu": envelope,
+        members = {FILES[1]: standalone, f"config/kefirjs/offline/{channel}/{feed_name}": envelope,
                    f"config/kefirjs/offline/{channel}/{args.version}/update.bin": data, **rescue}
         with ZipFile(args.offline_zip, "w") as pack:
             for name, value in members.items():

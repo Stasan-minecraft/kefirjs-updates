@@ -17,3 +17,5 @@ The publisher key is protected by Windows DPAPI for the account that created thi
 Use the full Atmosphere edition Windows ZIP and pass `--atmosphere-edition --native --output updates/atmosphere/native` when signing native updates. The independent client reads its own feed and checks the official Atmosphere core before committing changes. Its baseline is `base-atmosphere-2.0.0.json`. System runtime and native layout migrations use the full Windows installer.
 
 The 2.0.2 and 1.2.2 clients support signed service and artwork updates. Sign with `--native` in `updates/atmosphere/native` or `updates/native`. Earlier clients use the four-application bootstrap before switching channels. Phone repair kits include the two verified services at their live paths, plus the signed complete update.
+
+For a Preview release, pass `--channel preview --native`. Preview metadata carries a signed channel field. Stable clients reject previews placed in the Stable slot. Both channel pointers reference immutable, versioned payloads. A preview can follow the published Stable envelope for the same edition when there is no newer candidate.

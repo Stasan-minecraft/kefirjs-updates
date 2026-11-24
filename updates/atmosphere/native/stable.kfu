@@ -1,16 +1,16 @@
 KEFIRJS-SIGNED-1
-a5cffd3129759ebaf2d3670b19e62379fbadabc668cf6b6ec4b0405748d9ec6d9b04bc4d02353b8dd6bf24c5f587d9022204a31423f1cf685f3945b8ee096b0f
+512bb63f42a7640da5f1376340e9699aad3565da0af9b2b7f6eeedeb92fb2b21cef851d1a97003f32b289758f9fc5186574a82a7d7786ce30c506eff46de920c
 KEFIRJS-UPDATE-1
-version	2.0.2
+version	2.0.3
 base	20.5.0-ams-1.10.1
-note	Fix the 2168-0008 startup fault in KEFIRIZ Profiles and background transfers on Horizon 20.5.0.
-note	Five original Favorites icons, full Homebrew library on X, new Hekate startup art.
-note	Updater supports two verified GitHub endpoints, connection diagnostics and complete offline repair kits.
-file	hbmenu.nro	378781	ffd13fa442a43a550bc7421d7a0ff4427457dc0e1b950599777ee208e6e73574
-file	switch/KEFIRJS-Updater/KEFIRJS-Updater.nro	378233	2fc0802f88d598b3921b1f74132f06419d26ab5021ae5558f9e5df3aa5850ec9
-file	switch/KEFIRIZ-System/KEFIRIZ-System.nro	287759	e516145920d660b3d317ad6ccb4dfed782c8aa34a4c89716b58a94d761efac81
+note	Rename the update app to KEFIRIZ Updater in Homebrew and System. Existing SD shortcuts continue to work.
+note	Press X or tap Switch channel for Stable or Preview. The app saves the choice and checks the selected feed.
+note	Reopen the updater and select Preview to review KEFIRIZ Aurora 2.1.0.
+file	hbmenu.nro	378781	9763a60cf5140d0c5e52890833a33530a308a01a73c55a3b0e6e999013828b6e
+file	switch/KEFIRJS-Updater/KEFIRJS-Updater.nro	382329	95ea3c70752408c0e7d7aafd689ae976e95fa84f32648a7c4bfe12cf147538c4
+file	switch/KEFIRIZ-System/KEFIRIZ-System.nro	287759	d602fe3d44d09bf5eaf8b285b882e54e9ca4c56746164270c4f7cc4c7266f103
 file	atmosphere/contents/42000000004B4650/exefs.nsp	94113	67769c52f767bef031889baae7f65d767e9eb8c79514f2c93c375d50056c2346
 file	atmosphere/contents/42000000004B4654/exefs.nsp	103468	02dd442cfd441675f54a4e78d38ad410027cd991b15abfb71ef8ec1034af2037
 file	bootloader/res/KEFIRIZ-boot.bmp	3686454	70cdaea32588eb2484f7972dd8f229359de3ba9f177d1b43c320154d965084e1
 file	bootloader/res/KEFIRIZ-CFW.bmp	147510	915a37ef789fffea7c75216c4f01fd023988074bc7fc4f898265b0840f8937ce
-file	config/kefiriz/release.txt	35	88b62f6398215ca29a66e8029958edd99a31dede227770089e7d8464a52aee21
+file	config/kefiriz/release.txt	35	311fcf570bb2ae47ee61c88f5db60e3ce7b77a34c14938925d008b86dede03b2

@@ -9,7 +9,8 @@ const char *up_title(UpScreen s) {
     static const char *const titles[] = {
         "Firmware updates", "Checking for updates", "You're up to date",
         "An update is available", "Install this update?", "Installing update",
-        "Update installed", "Update recovered", "Update needs attention", "Checking SD card", "Online check unavailable"
+        "Update installed", "Update recovered", "Update needs attention", "Checking SD card", "Online check unavailable",
+        "Installed version is newer", "Profiles enabled"
     };
     return titles[s];
 }
@@ -26,7 +27,7 @@ const char *up_primary(UpScreen s) {
 void up_result(UpView *v, int rc) {
     switch (rc) {
     case KF_OFFLINE: v->screen = UP_OFFLINE; break;
-    case KF_CURRENT: v->screen = UP_CURRENT; break;
+    case KF_CURRENT: v->screen = strcmp(v->release.current, v->release.latest) && v->release.latest[0] ? UP_AHEAD : UP_CURRENT; break;
     case KF_AVAILABLE: v->screen = UP_AVAILABLE; break;
     case KF_APPLIED: v->screen = UP_INSTALLED; break;
     case KF_RECOVERED: v->screen = UP_RECOVERED; break;
@@ -37,12 +38,14 @@ void up_result(UpView *v, int rc) {
     v->phase[0] = 0;
 }
 static const char *description(const UpView *v) {
+    if (v->screen == UP_PROFILES_ENABLED)
+        return "Restart the Switch to use R + ZR in HOME and games.";
     if (v->screen == UP_CONFIRM)
         return "Install the selected release on this microSD? Keep the console powered and the card inserted until the update finishes.";
     if (v->screen == UP_INSTALLED)
         return "Close the updater. Your updated Homebrew menu and applications are ready to open.";
     if (v->screen == UP_READY)
-        return "Check the stable channel for firmware updates.";
+        return "Check the selected channel for firmware updates.";
     if (v->screen == UP_RECOVERING)
         return "Reading the update history on your microSD.";
     if (v->screen == UP_CHECKING)
@@ -97,6 +100,9 @@ UpCommand up_input(UpView *v, UpInput input) {
     } else if (input == UP_NEXT) {
         if (v->page + 1 < up_pages(v)) ++v->page;
     } else if (!up_busy(v->screen)) {
+        if (input == UP_CHANNEL && v->screen != UP_CONFIRM) return UP_SWITCH_CHANNEL;
+        if (input == UP_PROFILES && v->screen != UP_CONFIRM && v->compatible && v->release.profiles_off)
+            return UP_ENABLE_PROFILES;
         if (input == UP_BACK) {
             if (v->screen != UP_CONFIRM) return UP_CLOSE;
             v->screen = UP_AVAILABLE;
@@ -115,6 +121,8 @@ UpCommand up_input(UpView *v, UpInput input) {
 }
 
 int up_touch(int x, int y) {
+    if (y >= 592 && y < 678 && x >= 580 && x < 865) return UP_PROFILES;
+    if (y >= 592 && y < 678 && x >= 285 && x < 575) return UP_CHANNEL;
     if (y >= 592 && y < 678 && x >= 885 && x < 1224) return UP_PRIMARY;
     if (y >= 592 && y < 678 && x >= 51 && x < 212) return UP_BACK;
     if (y >= 543 && y < 590 && x >= 941 && x < 1036) return UP_PREVIOUS;

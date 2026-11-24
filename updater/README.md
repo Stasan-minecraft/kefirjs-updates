@@ -1,8 +1,10 @@
-# KEFIRJS Updater
+# KEFIRIZ Updater
 
 The native application checks signed KEFIRIZ releases. It obtains network access through Horizon and uses GitHub's raw content host or its contents API over verified TLS. On a failed check it identifies the service, DNS, TCP, TLS or HTTP stage. A newer, signed, complete offline kit on the card can be installed without waiting for Wi-Fi. An older or already installed offline kit cannot confirm what is on GitHub.
 
-KEFIRIZ 2.0.2 uses the independent Atmosphere channel. KEFIRIZ 1.2.2 uses the separate 786 channel. Extract the matching repair ZIP to the root of the microSD, then open the updater, select **Review update**, then **Install update**. Homebrew lists the updater second. KEFIRIZ System opens it with **X**. From Nintendo HOME hold **R + X** when starting an installed title.
+Press **X** or tap **Switch channel** to toggle Stable and Preview. The choice is stored independently for each firmware edition. A switch clears the previous selection and starts a fresh check. Installation always requires review and a newer matching release. Aurora uses the independent Atmosphere Preview feed. On the 786 edition Preview can track Stable while there is no newer preview.
+
+The NRO keeps its existing SD path for launch shortcuts and older clients. On Aurora, **Y** is available if Profiles is disabled. It verifies the installed module, enables its boot flag and prompts for a reboot.
 
 ## Build
 

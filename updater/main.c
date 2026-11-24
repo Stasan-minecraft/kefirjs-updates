@@ -106,7 +106,8 @@ static bool poll_worker(UpTask *t,UpView *v,unsigned *seen) {
 }
 static void text_draw(const UpView *v) {
     consoleClear();
-    printf("\n  KEFIRJS Updater\n\n  Installed  %s\n  Available  %s\n\n  %s\n\n",
+    printf("\n  KEFIRIZ Updater     %s channel\n\n  Installed  %s\n  Available  %s\n\n  %s\n\n",
+        v->release.preview?"Preview":"Stable",
         v->release.current[0]?v->release.current:"Unavailable",
         v->release.latest[0]?v->release.latest:"Unknown",up_title(v->screen));
     char lines[64][64];
@@ -121,6 +122,8 @@ static void text_draw(const UpView *v) {
     } else {
         if (v->screen!=UP_AVAILABLE || v->compatible) printf("\n  A   %s",up_primary(v->screen));
         printf("\n  B   %s\n",v->screen==UP_CONFIRM?"Back":"Close");
+        if (v->screen!=UP_CONFIRM) puts("  X   Switch channel");
+        if (v->screen!=UP_CONFIRM && v->release.profiles_off && v->compatible) puts("  Y   Enable R + ZR");
     }
     consoleUpdate(NULL);
 }
@@ -165,6 +168,8 @@ int main(void) {
         pressed=touching;
         if (down&(HidNpadButton_B|HidNpadButton_Plus)) input=UP_BACK;
         else if (down&HidNpadButton_A) input=UP_PRIMARY;
+        else if (down&HidNpadButton_X) input=UP_CHANNEL;
+        else if (down&HidNpadButton_Y) input=UP_PROFILES;
         else if (down&(HidNpadButton_Left|HidNpadButton_Up|HidNpadButton_StickLUp|
                       HidNpadButton_StickLLeft)) input=UP_PREVIOUS;
         else if (down&(HidNpadButton_Right|HidNpadButton_Down|HidNpadButton_StickLDown|
@@ -172,7 +177,23 @@ int main(void) {
         if (input>=0) {
             UpCommand cmd=up_input(&view,(UpInput)input);
             if (cmd==UP_CHECK || cmd==UP_APPLY) start(&task,&view,cmd==UP_APPLY,&seen);
-            else if (cmd==UP_CLOSE) closing=true;
+            else if (cmd==UP_SWITCH_CHANNEL) {
+                if (kf_set_preview(!view.release.preview)) {
+                    kf_local(&view.release);
+                    start(&task,&view,false,&seen);
+                } else {
+                    view.screen=UP_ERROR;
+                    view.page=0;
+                    snprintf(view.release.message,sizeof(view.release.message),"Could not save the channel on this microSD.");
+                }
+            }
+            else if (cmd==UP_ENABLE_PROFILES) {
+                bool ok=kf_enable_profiles();
+                kf_local(&view.release);
+                view.page=0;
+                view.screen=ok ? UP_PROFILES_ENABLED : UP_ERROR;
+                if (!ok) snprintf(view.release.message,sizeof(view.release.message),"Could not enable Profiles. Verify the Aurora installation and service files.");
+            } else if (cmd==UP_CLOSE) closing=true;
             dirty=true;
         }
         if (dirty && !closing) {
