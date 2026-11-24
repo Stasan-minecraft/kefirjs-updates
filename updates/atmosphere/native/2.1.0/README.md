@@ -6,7 +6,7 @@ An independent KEFIRIZ release for Horizon 20.5.0 with Atmosphère 1.10.1. Auror
 
 - **Existing KEFIRIZ 2.0.x.** Check Stable for 2.0.3, install it and reopen **KEFIRIZ Updater**. Press **X** or tap **Switch channel** to select **Preview**. Choose **Review update**, then **Install update**. Reboot into your usual Hekate configuration.
 - **Offline update from a phone.** Power off and back up the card, then extract the offline ZIP to the microSD root. Open **KEFIRIZ Updater**, select **Preview**, review and install. The archive includes the new updater and a signed local payload. [Offline Aurora update](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.1.0/KEFIRIZ-Aurora-2.1.0-Offline.zip)
-- **Windows installation.** Extract the full archive on the PC and run **install.bat** with the microSD connected. For a previously used /S environment, choose **KEFIRIZ (sysMMC)** under More Configs in Hekate. [Full Windows installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.1.0/KEFIRIZ-Aurora-2.1.0.zip)
+- **Windows installation.** Extract the full archive on the PC and run **install.bat** with the microSD connected. For a previously used /S environment, choose **KEFIRIZ (sysMMC)** under More Configs in Hekate. [Full Windows installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.1.0-r2/KEFIRIZ-Aurora-2.1.0-r2.zip)
 
 On an older 786 installation, the Windows installer migrates the card to the independent edition. The 786 client also receives the channel selector in its own 1.2.3 release. Its Preview channel currently follows the same version as Stable.
 

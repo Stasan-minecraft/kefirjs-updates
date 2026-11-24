@@ -1,6 +1,8 @@
 # KEFIRIZ Aurora
 
-**Aurora 2.1.0** is available on the **Preview** channel for Horizon 20.5.0 and Atmosphère 1.10.1. It adds a first-boot guide at HOME, an on-screen R + ZR profile panel and background download wake notifications. [Aurora release notes](updates/atmosphere/native/2.1.0/README.md) · [Full Windows installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.1.0/KEFIRIZ-Aurora-2.1.0.zip) · [Offline Aurora update](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.1.0/KEFIRIZ-Aurora-2.1.0-Offline.zip)
+**Aurora 2.1.0** is available on the **Preview** channel for Horizon 20.5.0 and Atmosphère 1.10.1. It adds a first-boot guide at HOME, an on-screen R + ZR profile panel and background download wake notifications. [Aurora release notes](updates/atmosphere/native/2.1.0/README.md) · [Full Windows installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.1.0-r2/KEFIRIZ-Aurora-2.1.0-r2.zip) · [Offline Aurora update](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.1.0/KEFIRIZ-Aurora-2.1.0-Offline.zip)
+
+**Windows installer r2** repairs missing KEFIRIZ Profiles and Transfers files when upgrading an existing card. After installation, `install.bat services` enables both verified modules and restores their sys-clk dependency if missing.
 
 **Installing from the console:** update the independent edition to 2.0.3 on Stable. Reopen **KEFIRIZ Updater**, press **X** or tap **Switch channel** to select Preview, then review and install Aurora. Stable follows 2.0.3 for this edition and 1.2.3 for 786. Each edition remembers its own choice.
 
