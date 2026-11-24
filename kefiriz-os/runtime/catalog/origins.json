@@ -1,0 +1,29 @@
+[
+  {
+    "id": "2048",
+    "title": "2048",
+    "license": "MIT",
+    "source": "https://github.com/TooTallNate/switch-2048/tree/v1.2.0",
+    "webSeed": "https://github.com/TooTallNate/switch-2048/releases/download/v1.2.0/2048.nro",
+    "infoHash": "0c1fa323bd2933533274fffd44f2eceb73472b99",
+    "sha256": "51f6588000d899c58faadc4443f9550f4e4bcc93719fabb3dc0537ec11037ff5"
+  },
+  {
+    "id": "minesweeper",
+    "title": "Minesweeper",
+    "license": "MIT",
+    "source": "https://github.com/rincew1nd/Minesweeper-Switch/tree/v2.0",
+    "webSeed": "https://github.com/rincew1nd/Minesweeper-Switch/releases/download/v2.0/Minesweeper-Switch.nro",
+    "infoHash": "19db482887850e56fb91ff850c195d39853790ac",
+    "sha256": "7172be2da02fefdebde3745f15d9e7beb7f08472fad3a2cc86eb70811b22cc9d"
+  },
+  {
+    "id": "sudoku",
+    "title": "SudokuNX",
+    "license": "GPL-3.0",
+    "source": "https://github.com/ZetaDesigns/SudokuNX/tree/1.0.1",
+    "webSeed": "https://github.com/ZetaDesigns/SudokuNX/releases/download/1.0.1/SudokuNX.nro",
+    "infoHash": "544484dc89785288e2f48bc80b4f307ead2290c4",
+    "sha256": "c2d64c7e17346f69dd4842df7243c7225d3bdc654655f603bbe7980bd2831b8a"
+  }
+]

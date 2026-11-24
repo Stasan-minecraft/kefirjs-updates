@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+/usr/lib/kefiriz/profile-init
+exec /usr/bin/retroarch --appendconfig /usr/lib/kefiriz/desktop.cfg \
+    -L /usr/lib/kefiriz/desktop.so /usr/lib/kefiriz/home.kfstart

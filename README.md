@@ -1,5 +1,11 @@
 # KEFIRIZ Meridian
 
+## Separate Linux desktop for Switch
+
+**KEFIRIZ OS 0.1.0** adds a second boot option alongside Meridian. Choose KEFIRIZ OS for the English desktop, programmable buttons, Wi-Fi and background transfers. Choose Meridian for your installed Switch games. The public build kit creates a Windows installer from the official Switchroot Linux download. [Build kit and preview](https://github.com/Stasan-minecraft/kefirjs-updates/releases/tag/kefiriz-os-v0.1.0) · [Desktop source and controls](kefiriz-os/README.md)
+
+## Meridian for Switch games
+
 **Meridian 2.2.0** is available on **Preview** for Horizon 20.5.0 and Atmosphère 1.10.1. The Windows installer builds a new gallery and three toolbar groups into Nintendo HOME from the resources on your card. Meridian includes a custom startup framebuffer for Atmosphère, new Homebrew, System and Updater interfaces, and original icons. Basic White and Basic Black control the system background and text. [Release notes](updates/atmosphere/native/full/2.2.0/README.md) · [Windows installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.2.0/KEFIRIZ-Meridian-2.2.0.zip) · [Offline console update](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.2.0/KEFIRIZ-Meridian-2.2.0-Offline.zip)
 
 If your card is missing HOME resources, open **KEFIRIZ Homebrew** on the console and wait for the ready message. You can also check the result or retry in **KEFIRIZ System**. Power off, reconnect the microSD and run **install.bat**. On a card previously put into theme recovery, use **install.bat artwork** after a fresh capture.

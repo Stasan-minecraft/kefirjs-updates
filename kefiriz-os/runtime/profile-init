@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+state=${KEFIRIZ_STATE_DIR:-/storage/kefiriz}
+umask 077
+mkdir -p "$state/actions" "$state/album" "$state/inbox" "$state/downloads" "$state/queue"

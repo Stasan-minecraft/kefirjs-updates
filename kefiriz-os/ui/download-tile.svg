@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" fill="none">
+  <defs>
+    <linearGradient id="paper" x1="29" y1="19" x2="219" y2="232" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fffdf7"/><stop offset="1" stop-color="#f5f2ea"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="66" y1="54" x2="171" y2="208" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff5544"/><stop offset=".52" stop-color="#fa382b"/><stop offset="1" stop-color="#ef3027"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="99" y1="66" x2="177" y2="123" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff6751"/><stop offset=".62" stop-color="#bf211d"/><stop offset="1" stop-color="#a91918"/>
+    </linearGradient>
+    <radialGradient id="shadow">
+      <stop stop-color="#71392d" stop-opacity=".31"/><stop offset="1" stop-color="#71392d" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <path fill="url(#paper)" d="M0 0h240v240H0z"/>
+  <ellipse cx="121" cy="210" rx="84" ry="10" fill="url(#shadow)"/>
+  <path d="M43 80c0-28 20-48 46-48h48c10 0 18 4 26 12l28 30c8 8 11 17 11 29v64c0 28-18 47-45 47H88c-27 0-45-21-45-48Z" fill="url(#ink)"/>
+  <path d="M43 135c1-23 10-44 34-54 17-7 38-12 60-16 14-3 25-3 36 4l19 12c7 5 10 13 10 24v1h-48c-11 0-17-7-17-17V66C97 74 59 78 43 111Z" fill="url(#fold)"/>
+  <path d="M106 76c9-3 26-7 38-8v58h22c5 0 7 6 4 10l-43 49c-3 3-7 3-10 0l-43-49c-3-4-1-10 5-10h23V81c0-3 1-4 4-5Z" fill="#fffdf7"/>
+</svg>
