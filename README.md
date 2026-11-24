@@ -1,12 +1,12 @@
-# KEFIRIZ Aurora
+# KEFIRIZ Meridian
 
-**Aurora 2.1.1** is available on **Preview** for Horizon 20.5.0 and Atmosphère 1.10.1. The Windows installer adds Aurora accents and toolbar icons to Nintendo HOME when it finds matching resources on your card. Basic White and Basic Black control the system background and text. [Release notes](updates/atmosphere/native/2.1.1/README.md) · [Windows installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.1.1/KEFIRIZ-Aurora-2.1.1.zip) · [Offline console update](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.1.1/KEFIRIZ-Aurora-2.1.1-Offline.zip)
+**Meridian 2.2.0** is available on **Preview** for Horizon 20.5.0 and Atmosphère 1.10.1. The Windows installer builds a new gallery and three toolbar groups into Nintendo HOME from the resources on your card. Meridian includes a custom startup framebuffer for Atmosphère, new Homebrew, System and Updater interfaces, and original icons. Basic White and Basic Black control the system background and text. [Release notes](updates/atmosphere/native/full/2.2.0/README.md) · [Windows installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.2.0/KEFIRIZ-Meridian-2.2.0.zip) · [Offline console update](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.2.0/KEFIRIZ-Meridian-2.2.0-Offline.zip)
 
 If your card is missing HOME resources, open **KEFIRIZ Homebrew** on the console and wait for the ready message. You can also check the result or retry in **KEFIRIZ System**. Power off, reconnect the microSD and run **install.bat**. On a card previously put into theme recovery, use **install.bat artwork** after a fresh capture.
 
-**Installing from the console**. Update the independent edition to 2.0.3 on Stable. Reopen **KEFIRIZ Updater**, select Preview, then review and install Aurora. With the older online updater, reopen it once more on Preview to finish the Profiles update. The offline kit includes the current updater and applies the full release in one pass. Stable follows 2.0.3 for this edition and 1.2.3 for 786.
+**Installing from the console**. Update the independent edition to 2.0.3 on Stable. Reopen **KEFIRIZ Updater**, select Preview, then review and install Meridian. An older online updater first installs the 2.1.1 transition. Reopen it on Preview to continue to Meridian. The offline kit includes the current updater and applies the full release in one pass. Stable follows 2.0.3 for this edition and 1.2.3 for 786.
 
-![Aurora Homebrew Favorites](media/aurora-homebrew.png)
+![Meridian Homebrew, System and Updater in both palettes, rendered by the applications with sample status](media/meridian-apps.jpg)
 
 ## Recover an earlier installation
 
@@ -28,7 +28,7 @@ A running older updater can also install the bootstrap through GitHub. Reopen it
 
 ## Install on a configured card
 
-For the independent Atmosphere edition, extract the full archive on a Windows PC and run **install.bat**. [Download the 2.0.2 installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.0.2/KEFIRIZ-Atmosphere-2.0.2.zip)
+For the independent Atmosphere edition on Horizon 20.5.0, extract the full archive on a Windows PC and run **install.bat**. [Download the Meridian installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.2.0/KEFIRIZ-Meridian-2.2.0.zip)
 
 For a configured Kefir 786 card that has never had KEFIRIZ installed, first run the 1.2.0 Windows installer. Before booting, extract the 1.2.2 repair kit to the microSD. Boot your usual CFW, open the updater and install the signed update. [Legacy 1.2.0 full package](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/v1.2.0/KEFIRIZ-786-1.2.0.zip) · [1.2.2 repair kit](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.0.2/KEFIRJS-Repair-786-1.2.2.zip)
 
@@ -42,7 +42,7 @@ For a configured Kefir 786 card that has never had KEFIRIZ installed, first run 
 | Nintendo HOME | Hold **R + X** while starting an installed game with the standard title-override configuration. |
 | A dedicated HOME tile | An existing forwarder-capable setup can point its own shortcut at the standalone NRO path above. The Windows installer does not register a Nintendo title. |
 
-![KEFIRIZ Updater interface](media/aurora-updater.png)
+
 
 ## Release files
 

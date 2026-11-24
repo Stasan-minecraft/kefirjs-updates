@@ -102,6 +102,7 @@ bool k_release_line(const char *line, size_t n, SystemSnapshot *s) {
     if (!strcmp(s->edition, "Atmosphere edition")) {
         if (!strcmp(s->release, "KEFIRIZ 2.1.0")) strcpy(s->release, "KEFIRIZ Aurora 2.1.0");
         if (!strcmp(s->release, "KEFIRIZ 2.1.1")) strcpy(s->release, "KEFIRIZ Aurora 2.1.1");
+        if (!strcmp(s->release, "KEFIRIZ 2.2.0")) strcpy(s->release, "KEFIRIZ Meridian 2.2.0");
     }
     return true;
 }
@@ -119,36 +120,39 @@ int k_footer_hit(int x, int y) {
 void k_draw(uint32_t *pixels, int step, const SystemSnapshot *s) {
     buf = pixels;
     stride = step;
-    uint32_t paper = rgb(s->dark ? 0x202324 : 0xf6f4ec);
-    uint32_t ink = rgb(s->dark ? 0xf7f4e8 : 0x262a2b);
-    uint32_t secondary = rgb(s->dark ? 0xb7b7b0 : 0x565b57);
-    uint32_t rule = rgb(s->dark ? 0x464947 : 0xd9d8ce);
-    uint32_t panel = rgb(s->dark ? 0x2b2f2f : 0xebe9df);
-    uint32_t accent = rgb(s->dark ? 0xff8b70 : 0xb63624);
+    uint32_t paper = rgb(s->dark ? 0x101820 : 0xeef5f2);
+    uint32_t ink = rgb(s->dark ? 0xecf7f5 : 0x152a35);
+    uint32_t secondary = rgb(s->dark ? 0xa7bdc4 : 0x4d636b);
+    uint32_t rule = rgb(s->dark ? 0x364952 : 0xbdcecc);
+    uint32_t panel = rgb(s->dark ? 0x1c2b37 : 0xdce9e7);
+    uint32_t accent = rgb(s->dark ? 0x94f1cf : 0x006d60);
     rect(0, 0, K_WIDTH, K_HEIGHT, paper);
-    rect(64, 63, 27, 4, accent);
-    label(104, 72, 27, "KEFIRIZ", ink, 270, false);
-    label(64, 163, 72, "System information", ink, 1100, false);
-    rect(64, 193, 1152, 2, rule);
-    rect(64, 230, 451, 332, panel);
-    emblem(95, 256);
-    label(96, 416, 26, "Installed release", secondary, 364, false);
-    label(92, 480, 54, s->release, ink, 391, false);
-    label(96, 526, 30, s->edition, secondary, 380, false);
+    rect(0, 0, K_WIDTH, 81, rgb(0x152a36));
+    rect(54, 34, 5, 22, rgb(0x94f1cf));
+    rect(63, 29, 5, 22, rgb(0x648bff));
+    label(84, 58, 28, "KEFIRIZ  /  MERIDIAN", rgb(0xe6f6f2), 420, false);
+    label(54, 153, 67, "System information", ink, 1168, false);
+    rect(54, 178, 446, 357, rgb(0x172c3b));
+    for (int i = 0; i < 75; i++)
+        rect(375+i, 268-i, 30, 2, rgb(0x234a5a));
+    emblem(81, 203);
+    label(81, 357, 24, "Installed release", rgb(0xb6ccd0), 385, false);
+    label(79, 417, 47, s->release, rgb(0xeaf6f3), 391, false);
+    rect(81, 451, 389, 1, rgb(0x44626c));
+    label(81, 500, 29, s->edition, rgb(0x94f1cf), 388, false);
     const char *keys[] = {"Horizon OS",   "Atmosphere",      "Environment",
                           "System color", "Homebrew memory", "SD card"};
     const char *values[] = {s->horizon, s->atmosphere, s->environment,
                             s->color,   s->context,    s->storage};
     for (int i = 0; i < 6; i++) {
-        int top = 226 + 57 * i;
-        label(570, top + 34, 28, keys[i], secondary, 245, false);
-        label(1215, top + 34, 32, values[i], ink, 377, true);
-        if (i != 5)
-            rect(570, top + 56, 646, 1, rule);
+        int top = 178 + 122 * (i / 2), left = 520 + 356 * (i % 2);
+        rect(left, top, 344, 113, panel);
+        label(left+20, top+38, 23, keys[i], secondary, 306, false);
+        label(left+20, top+83, 36, values[i], ink, 306, false);
     }
     if (s->native_source)
         label(64, 590, 24, s->native_source, secondary, 1152, false);
-    rect(64, 608, 1152, 2, rule);
+    rect(54, 608, 1172, 2, rule);
     if (s->updater_error)
         label(64, 665, 23, "Could not open KEFIRIZ Updater", accent, 470, false);
     label(575, 665, 28, "X   Updater", ink, 205, false);

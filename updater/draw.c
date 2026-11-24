@@ -16,10 +16,10 @@ static uint32_t rgb(unsigned c) {
     return 0xff000000u | (c >> 16) | (c & 0xff00) | ((c & 255) << 16);
 }
 static Palette colors(bool dark) {
-    if (dark) return (Palette){rgb(0x15191c),rgb(0x252b2e),rgb(0xf9f6ed),rgb(0xb4bebf),
-        rgb(0x41494c),rgb(0xff826d),rgb(0xff826d),rgb(0x211719)};
-    return (Palette){rgb(0xf5f3ed),rgb(0xe9e6dd),rgb(0x1c2326),rgb(0x515d60),
-        rgb(0xc8ccc5),rgb(0xb73627),rgb(0xb73627),rgb(0xffffff)};
+    if (dark) return (Palette){rgb(0x101820),rgb(0x1c2b37),rgb(0xecf7f5),rgb(0xa7bdc4),
+        rgb(0x364952),rgb(0x94f1cf),rgb(0x94f1cf),rgb(0x122832)};
+    return (Palette){rgb(0xeef5f2),rgb(0xdce9e7),rgb(0x152a35),rgb(0x4d636b),
+        rgb(0xbdcecc),rgb(0x006d60),rgb(0x2348b5),rgb(0xffffff)};
 }
 static void rect(int x,int y,int w,int h,uint32_t c) {
     for (int j = y; j < y+h; ++j)
@@ -106,18 +106,22 @@ void up_draw(uint32_t *pixels,int stride,const UpView *v) {
     pitch=stride;
     Palette p=colors(v->dark);
     rect(0,0,UP_WIDTH,UP_HEIGHT,p.paper);
-    rect(54,42,7,24,p.accent);
-    label(75,63,27,"KEFIRIZ",p.text,148);
-    label(1043,63,24,v->release.preview?"Preview channel":"Stable channel",p.muted,182);
-    label(50,147,68,"KEFIRIZ Updater",p.text,1190);
-    rect(53,178,1171,1,p.rule);
+    rect(0,0,UP_WIDTH,81,rgb(0x152a36));
+    rect(54,34,5,22,rgb(0x94f1cf));
+    rect(63,29,5,22,rgb(0x648bff));
+    label(84,58,28,"KEFIRIZ  /  MERIDIAN",rgb(0xe6f6f2),420);
+    label(52,149,67,"Firmware updates",p.text,1190);
 
-    rounded(53,212,415,347,18,p.card);
-    icon(82,240);
-    label(83,411,25,"Installed firmware",p.muted,356);
-    label(81,469,52,v->release.current[0]?v->release.current:"Unavailable",p.text,357);
-    label(83,524,25,"KEFIRIZ  /  " KF_EDITION,p.muted,357);
+    rounded(53,180,415,382,18,rgb(0x172c3b));
+    icon(82,206);
+    for (int i=0;i<69;i++) rect(349+i,265-i,24,2,rgb(0x234a5a));
+    label(83,367,25,"Installed firmware",rgb(0xb6ccd0),356);
+    label(81,429,65,v->release.current[0]?v->release.current:"Unavailable",rgb(0xeaf6f3),357);
+    label(83,473,24,KF_EDITION,rgb(0xb6ccd0),357);
+    rect(82,493,356,1,rgb(0x44626c));
+    label(83,536,27,v->release.preview?"Preview channel":"Stable channel",rgb(0x94f1cf),356);
 
+    rect(490,180,735,3,p.accent);
     label(508,249,46,up_title(v->screen),p.text,707);
     char latest[96];
     const bool show_latest=v->release.latest[0] && (v->screen==UP_AVAILABLE ||

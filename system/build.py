@@ -38,7 +38,7 @@ def main():
     parser.add_argument("--sdk", type=Path, default=os.environ.get("DEVKITPRO"),
                         required="DEVKITPRO" not in os.environ)
     parser.add_argument("--output", type=Path, default=Path("KEFIRIZ-System.nro"))
-    parser.add_argument("--version", default="2.1.1")
+    parser.add_argument("--version", default="2.2.0")
     args = parser.parse_args()
     sdk = args.sdk.resolve()
     nx = sdk / "libnx"

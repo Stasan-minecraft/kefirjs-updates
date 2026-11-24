@@ -1,0 +1,4 @@
+Meridian redesigns Homebrew, System, Updater and the version guide with a mint and cobalt identity.
+With the Windows installer, Nintendo HOME gains a gallery layout, three toolbar groups and nine new icons.
+Settings, News and All Software use their native screens with Meridian styling when resources are available.
+Meridian boot artwork is available in Hekate. Windows also installs the custom Atmosphere splash framebuffer.
