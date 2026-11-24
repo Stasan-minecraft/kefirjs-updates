@@ -4,12 +4,12 @@ KEFIRIZ OS provides an English-language desktop for Switch. Its own executable d
 
 ## On the console
 
-- Select **KEFIRIZ OS** in Hekate. Each release has a first-run guide. Open it again under **Settings в†’ Feature guide**.
+- Select **KEFIRIZ OS** in Hekate. Each release has a first-run guide. Open it again under **Settings → Feature guide**.
 - Press **R + ZR** in any desktop window for Quick settings. Change the current profile's appearance or clock, check free storage, or enter the transfer queue. Press the shortcut again to return to the window you were using.
-- Move with the directional buttons, press **A** to open and **B** to return. Tap a tile or dialog row to select it. **Plus** assigns a feature to the selected HOME tile or dock button. **Settings в†’ Customize dock** gives access to all six positions. **X** switches among three local profiles.
+- Move with the directional buttons, press **A** to open and **B** to return. Tap a tile or dialog row to select it. **Plus** assigns a feature to the selected HOME tile or dock button. **Settings → Customize dock** gives access to all six positions. **X** switches among three local profiles.
 - In **Settings**, choose Graphite or Porcelain, set the clock format, or open **Wi-Fi**. Scan, choose an open or personal-password network, then enter the password using the on-screen keyboard. Connection availability depends on the Switch wireless driver and access point.
 - **Torrent** includes three publisher-sourced Switch homebrew downloads. It also accepts compatible BitTorrent v1 metadata from the inbox. The independent transfer service keeps downloading in other KEFIRIZ OS windows and resumes when Linux boots again. Internet downloads pause while Meridian is running. Downloaded Switch homebrew is for Meridian, and importing a torrent stores its files without installing a game title.
-- Press **Y** to capture a screen, then open **Album** to view it. **Power в†’ Restart to boot menu** returns to Hekate. Choose **KEFIRIZ Meridian** for installed Switch games.
+- Press **Y** to capture a screen, then open **Album** to view it. **Power → Restart to boot menu** returns to Hekate. Choose **KEFIRIZ Meridian** for installed Switch games.
 
 ## Your own actions
 
@@ -49,5 +49,5 @@ python3 install/prepare_release.py --version 0.2.0 --payload /var/tmp/kefiriz-pa
 
 The upstream board files and kernel are pinned. The custom root filesystem includes the desktop, wireless and transfer services, boot art and versioned system identity. The renderer uses Barlow and PT Sans. Their notices, the Go license and the dependency notices ship with the worker. The linked libretro API header carries its upstream license.
 
-[Switchroot installation and hardware requirements](https://wiki.switchroot.org/wiki/linux/l4t-lakka-install-update-guide) В· [Lakka on the Switch](https://www.lakka.tv/doc/Nintendo-Switch/) В· [Rain BitTorrent engine](https://github.com/cenkalti/rain)
+[Switchroot installation and hardware requirements](https://wiki.switchroot.org/wiki/linux/l4t-lakka-install-update-guide) · [Lakka on the Switch](https://www.lakka.tv/doc/Nintendo-Switch/) · [Rain BitTorrent engine](https://github.com/cenkalti/rain)
 
