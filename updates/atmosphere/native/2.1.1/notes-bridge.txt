@@ -1,0 +1,3 @@
+Install the new updater and Aurora 2.1.1 applications.
+Reopen KEFIRIZ Updater on Preview, review the remaining Profiles update, then restart.
+Homebrew can prepare the running HOME resources for native artwork on Windows.

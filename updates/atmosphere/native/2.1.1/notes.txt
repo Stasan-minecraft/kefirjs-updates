@@ -1,0 +1,4 @@
+Native HOME keeps its own Basic White and Basic Black backgrounds under Aurora accents and toolbar icons.
+Windows install.bat builds artwork automatically from matching Horizon 20.5.0 resources on your card.
+Homebrew saves your own HOME resources when Horizon grants access. Check or retry in KEFIRIZ System.
+The release guide explains native themes. The lock screen uses its original layout.

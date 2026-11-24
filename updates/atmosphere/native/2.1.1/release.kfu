@@ -1,0 +1,17 @@
+KEFIRJS-SIGNED-1
+e3835821231667d1c208aeb8cc74f2600e62e38b33f7ae0ab489932c8282c6e464f4e433acf283c4cbe1900170264663a5a1ca8d795f5d425622176b92d82c0b
+KEFIRJS-UPDATE-1
+version	2.1.1
+base	20.5.0-ams-1.10.1
+channel	preview
+note	Install the new updater and Aurora 2.1.1 applications.
+note	Reopen KEFIRIZ Updater on Preview, review the remaining Profiles update, then restart.
+note	Homebrew can prepare the running HOME resources for native artwork on Windows.
+file	hbmenu.nro	399261	71447f9f76f7a31141cd2d53632b96af263b0eb02c830e6c2850f02d062bf6ab
+file	switch/KEFIRJS-Updater/KEFIRJS-Updater.nro	386425	0503fd8f28a7041e9b2e5becd2ba57959c6f962f064c504cec9bb22662f85550
+file	switch/KEFIRIZ-System/KEFIRIZ-System.nro	308239	2cd5b28fdd8f491f147a7a5c540d34b5eefa344191d20c07f885ba3ae39f0845
+file	atmosphere/contents/42000000004B4650/exefs.nsp	131403	90d294b6c7edda4492aea5698acf263840211c0cb4cd4aacbaf4900e851c7a4a
+file	atmosphere/contents/42000000004B4654/exefs.nsp	103925	cc26b4bbce60969f650ce3c543ab612f299f20864fd7d4c78029159dcb4fb117
+file	bootloader/res/KEFIRIZ-boot.bmp	3686454	61d714c98ace163e43c07a38e241a8daf2b1232b5b26f1d5dba10900f0abdde7
+file	bootloader/res/KEFIRIZ-CFW.bmp	147510	4c0e77177403b5d574cc3a763838357a98428877139670199d03ed9b6c99553f
+file	config/kefiriz/release.txt	35	166ad12edd2206a9e3b8a61847e8492c9d8a3f82eba10f9dae019ec4935534e7

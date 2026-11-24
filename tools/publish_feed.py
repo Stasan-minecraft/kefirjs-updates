@@ -43,6 +43,10 @@ def main():
     cli.add_argument("--atmosphere-edition", action="store_true", help="Use the independent Atmosphere channel and archive")
     cli.add_argument("--native", action="store_true", help="Sign the native service repair channel")
     cli.add_argument("--channel", choices=("stable", "preview"), default="stable")
+    cli.add_argument("--full-preview", action="store_true",
+                     help="Use the full Preview feed read by Aurora 2.1.1 and newer")
+    cli.add_argument("--bridge-profiles-from", type=Path,
+                     help="Build the one-time Aurora 2.1.1 legacy Preview using the released 2.1.0 Profiles binary")
     cli.add_argument("--initialize", action="store_true")
     cli.add_argument("--archive", type=Path)
     cli.add_argument("--version")
@@ -74,10 +78,28 @@ def main():
     edition = "Atmosphere edition" if independent else "Horizon edition 786"
     channel = "updates/atmosphere" if independent else "updates"
     files = FILES
+    if (args.full_preview or args.bridge_profiles_from) and not (
+            independent and args.native and args.channel == "preview"):
+        raise ValueError("The Aurora bridge and full feeds require native Atmosphere Preview")
+    if args.bridge_profiles_from and (args.full_preview or args.version != "2.1.1" or args.offline_zip):
+        raise ValueError("The legacy bridge is the one-time online 2.1.1 Preview")
+    if (independent and args.native and args.channel == "preview"
+            and tuple(map(int, args.version.split("."))) >= (2, 1, 1)
+            and not (args.full_preview or args.bridge_profiles_from)):
+        raise ValueError("Select the full Preview channel for new Aurora releases")
+    profile_path = "atmosphere/contents/42000000004B4650/exefs.nsp"
+    bridge_profile = None
+    if args.bridge_profiles_from:
+        with ZipFile(args.bridge_profiles_from) as prior:
+            bridge_profile = prior.read("config/kefiriz/standalone/bundle/sd/" + profile_path)
+        if sha256(bridge_profile).hexdigest() != "90d294b6c7edda4492aea5698acf263840211c0cb4cd4aacbaf4900e851c7a4a":
+            raise ValueError("The bridge requires the original published 2.1.0 Profiles")
     if args.native:
         channel += "/native"
+        if args.full_preview:
+            channel += "/full"
         files = (*FILES[:-1],
-                 "atmosphere/contents/42000000004B4650/exefs.nsp",
+                 profile_path,
                  "atmosphere/contents/42000000004B4654/exefs.nsp",
                  "bootloader/res/KEFIRIZ-boot.bmp" if independent else "bootloader/bootlogo_kefir.bmp",
                  "bootloader/res/KEFIRIZ-CFW.bmp" if independent else "bootloader/res/atmosphere.bmp",
@@ -119,6 +141,9 @@ def main():
                 raise ValueError("Release file is damaged: " + name)
             if name == FILES[-1] and file.splitlines() != [f"KEFIRIZ {args.version} / {edition}".encode()]:
                 raise ValueError("Wrong installed-release marker")
+            if name == profile_path and bridge_profile is not None:
+                file = bridge_profile
+                size, digest = len(file), sha256(file).hexdigest()
             data.extend(file)
             body.append(f"file\t{name}\t{size}\t{digest}")
         standalone = pack.read(root + "sd/" + FILES[1])

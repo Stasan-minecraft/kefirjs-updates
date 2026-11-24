@@ -27,7 +27,8 @@
 #define TRANSFER_DIR "atmosphere/contents/42000000004B4654"
 #define PROFILE_MODULE PROFILE_DIR "/exefs.nsp"
 #define PROFILE_FLAG SD PROFILE_DIR "/flags/boot2.flag"
-#define AURORA_PROFILES "90d294b6c7edda4492aea5698acf263840211c0cb4cd4aacbaf4900e851c7a4a"
+#define AURORA_210_PROFILES "90d294b6c7edda4492aea5698acf263840211c0cb4cd4aacbaf4900e851c7a4a"
+#define AURORA_211_PROFILES "6e56bdc65af6da093724d93419ad9f60e3f66da7f820d1072a39b2d85797d0a2"
 #define AURORA_TRANSFERS "cc26b4bbce60969f650ce3c543ab612f299f20864fd7d4c78029159dcb4fb117"
 #define TRANSFER_MODULE TRANSFER_DIR "/exefs.nsp"
 #define PARKED SD "config/kefiriz/profile-recovery/"
@@ -238,19 +239,35 @@ static bool preview_selected(void) {
     struct stat st;
     return !stat(PREVIEW_CHOICE, &st) && S_ISDIR(st.st_mode);
 }
+static const char *profiles_for_release(const char *release) {
+    if (!strcmp(release, "2.1.1")) return AURORA_211_PROFILES;
+    if (!strcmp(release, "2.1.0")) return AURORA_210_PROFILES;
+    return NULL;
+}
 void kf_local(KfUpdate *u) {
     memset(u, 0, sizeof(*u));
     u->preview = preview_selected();
     if (!read_marker(SD MARKER, u->current)) strcpy(u->current, "Unknown");
     struct stat st;
-    u->profiles_off = !strcmp(u->current, "2.1.0") && stat(PROFILE_FLAG, &st) != 0 && errno == ENOENT;
+    u->profiles_off = profiles_for_release(u->current) && stat(PROFILE_FLAG, &st) != 0 && errno == ENOENT;
 }
-static void offline_payload(char path[256], const Manifest *m) {
-    snprintf(path, 256, OFFLINE KF_UPDATES "/%s/update.bin", m->version);
+static bool bridge_for(const Manifest *full);
+static bool regular_hash(const char *path, char out[65]);
+static bool can_complete(const char *current, const Manifest *full, bool preview) {
+    char hex[65]; struct stat st;
+    return preview && !strcmp(current, "2.1.1") && !strcmp(current, full->version) &&
+           stat(OTA "/2.1.1-complete", &st) && errno == ENOENT &&
+           regular_hash(SD PROFILE_MODULE, hex) && !strcmp(hex, AURORA_210_PROFILES) && bridge_for(full);
 }
-static bool payload_present(const Manifest *m) {
+static const char *feed_root(bool preview) {
+    return preview ? KF_PREVIEW_UPDATES : KF_UPDATES;
+}
+static void offline_payload(char path[256], const Manifest *m, bool preview) {
+    snprintf(path, 256, OFFLINE "%s/%s/update.bin", feed_root(preview), m->version);
+}
+static bool payload_present(const Manifest *m, bool preview) {
     char path[256]; struct stat st;
-    offline_payload(path, m);
+    offline_payload(path, m, preview);
     return !stat(path, &st) && S_ISREG(st.st_mode) && st.st_size >= 0 &&
            (uint64_t)st.st_size == m->bytes;
 }
@@ -261,14 +278,15 @@ int kf_check(KfUpdate *u, KfProgress cb, void *ctx) {
         return fail(u, "Install KEFIRIZ " KF_EDITION " with the Windows installer first.");
 
     // A complete, newer offline release can be installed with Wi-Fi turned off.
-    const char *feed_path = u->preview ? KF_UPDATES "/preview.kfu" : KF_UPDATES "/stable.kfu";
+    const char *feed_path = u->preview ? KF_PREVIEW_UPDATES "/preview.kfu" : KF_UPDATES "/stable.kfu";
     char local_path[256];
     snprintf(local_path, sizeof(local_path), OFFLINE "%s", feed_path);
     Buffer local = {0};
     Manifest local_release, verified;
     bool local_read = from_file(local_path, mem_sink, &local, MAX_FEED);
     bool local_valid = local_read && parse(&local, &local_release) && (!local_release.preview || u->preview);
-    if (local_valid && compare(u->current, local_release.version) < 0 && payload_present(&local_release)) {
+    if (local_valid && (compare(u->current, local_release.version) < 0 ||
+                        can_complete(u->current, &local_release, u->preview)) && payload_present(&local_release, u->preview)) {
         offline = true;
         signed_feed = local;
         verified = local_release;
@@ -294,12 +312,14 @@ int kf_check(KfUpdate *u, KfProgress cb, void *ctx) {
     }
     strcpy(u->latest, verified.version); strcpy(u->notes, verified.notes); u->bytes = verified.bytes;
     int cmp = compare(u->current, u->latest);
-    if (cmp >= 0) {
+    bool completion = cmp == 0 && can_complete(u->current, &verified, u->preview);
+    if (cmp >= 0 && !completion) {
         strcpy(u->message, cmp ? "The installed release is newer than this channel." : "You are up to date.");
         return KF_CURRENT;
     }
     selection = verified;
-    strcpy(u->message, offline ? "Signed offline update available." : "Signed update available.");
+    strcpy(u->message, completion ? "Review the signed Aurora Profiles update to finish installing 2.1.1." :
+                       offline ? "Signed offline update available." : "Signed update available.");
     return KF_AVAILABLE;
 }
 
@@ -341,12 +361,12 @@ static bool regular_hash(const char *path, char out[65]) {
     fclose(in); return ok;
 }
 static const struct {
-    const char *module, *dir, *pending, *previous_sha, *current_sha;
+    const char *module, *dir, *pending, *known[3];
 } services[] = {
     {PROFILE_MODULE, SD PROFILE_DIR, PARKED "profiles/pending/boot2.flag",
-     "67769c52f767bef031889baae7f65d767e9eb8c79514f2c93c375d50056c2346", AURORA_PROFILES},
+     {"67769c52f767bef031889baae7f65d767e9eb8c79514f2c93c375d50056c2346", AURORA_210_PROFILES, AURORA_211_PROFILES}},
     {TRANSFER_MODULE, SD TRANSFER_DIR, PARKED "transfer/pending/boot2.flag",
-     "02dd442cfd441675f54a4e78d38ad410027cd991b15abfb71ef8ec1034af2037", AURORA_TRANSFERS}
+     {"02dd442cfd441675f54a4e78d38ad410027cd991b15abfb71ef8ec1034af2037", AURORA_TRANSFERS, NULL}}
 };
 static bool has_saved_flag(void) {
     struct stat st;
@@ -373,8 +393,11 @@ static void restore_saved_flags(const Manifest *m) {
     for (size_t i = 0; i < COUNT(services); i++) {
         if (stat(services[i].pending, &st) || !S_ISREG(st.st_mode)) continue;
         for (size_t j = 0; j < m->count; j++) {
-            if (strcmp(m->files[j].path, services[i].module) ||
-                (strcmp(m->files[j].sha, services[i].previous_sha) && strcmp(m->files[j].sha, services[i].current_sha))) continue;
+            if (strcmp(m->files[j].path, services[i].module)) continue;
+            bool known = false;
+            for (size_t k = 0; k < COUNT(services[i].known) && services[i].known[k]; ++k)
+                if (!strcmp(m->files[j].sha, services[i].known[k])) known = true;
+            if (!known) continue;
             snprintf(path, sizeof(path), SD "%s", services[i].module);
             if (!regular_hash(path, hex) || strcmp(hex, m->files[j].sha)) break;
             const char *const disabled[] = {".off", "/flags.off", "/exefs.nsp.off"};
@@ -408,9 +431,9 @@ bool kf_enable_profiles(void) {
     if (!is_base() || !parents(OTA "/operation.lock") || !kf_lock()) return false;
     struct stat st;
     char digest[65], version_text[24];
-    bool ok = stat(ACTIVE, &st) && errno == ENOENT && read_marker(SD MARKER, version_text)
-        && !strcmp(version_text, "2.1.0") && regular_hash(SD PROFILE_MODULE, digest)
-        && !strcmp(digest, AURORA_PROFILES) && stat(SD PROFILE_DIR "/flags.off", &st) && errno == ENOENT
+    const char *expected = read_marker(SD MARKER, version_text) ? profiles_for_release(version_text) : NULL;
+    bool ok = stat(ACTIVE, &st) && errno == ENOENT && expected && regular_hash(SD PROFILE_MODULE, digest)
+        && !strcmp(digest, expected) && stat(SD PROFILE_DIR "/flags.off", &st) && errno == ENOENT
         && stat(PROFILE_FLAG, &st) && errno == ENOENT && parents(PROFILE_FLAG);
     if (ok) {
         const char *sources[] = {PROFILE_FLAG ".off", PARKED "profiles/pending/boot2.flag"};
@@ -492,17 +515,59 @@ static bool read_journal(Journal *j, const Manifest *m, const char *path) {
     }
     return !*cursor && assets == m->count && !strcmp(j->rows[j->count-1].path, MARKER);
 }
-static void restore_from_receipt(const char *current) {
+static bool read_receipt(const char *current, bool complete, Manifest *m) {
     char path[256];
-    Buffer receipt = {0}; Manifest m; Journal j;
-    if (!has_receipt(current, path) || !from_file(path, mem_sink, &receipt, MAX_FEED) ||
-        !parse(&receipt, &m) || strcmp(m.version, current)) return;
-    snprintf(path, sizeof(path), OTA "/%s/originals.tsv", current);
-    if (read_journal(&j, &m, path)) restore_saved_flags(&m);
+    unsigned parts[3];
+    if (!version(current, parts) || (complete && strcmp(current, "2.1.1"))) return false;
+    const char *suffix = complete ? "-complete" : "";
+    Buffer receipt = {0}; Journal j;
+    snprintf(path, sizeof(path), OTA "/%s%s/stable.kfu", current, suffix);
+    if (!from_file(path, mem_sink, &receipt, MAX_FEED) || !parse(&receipt, m) || strcmp(m->version, current)) return false;
+    snprintf(path, sizeof(path), OTA "/%s%s/originals.tsv", current, suffix);
+    return read_journal(&j, m, path);
 }
-static bool version_dir(char path[256], const Manifest *m) {
+static bool bridge_for(const Manifest *full) {
+#ifdef KF_ATMOSPHERE_EDITION
+    if (!full->preview || strcmp(full->version, "2.1.1") || full->count != COUNT(allowed)) return false;
+    char digest[65]; Manifest bridge;
+    if (!read_receipt(full->version, false, &bridge) || !bridge.preview || bridge.count != full->count ||
+        !regular_hash(SD MARKER, digest) || strcmp(digest, full->files[full->count-1].sha)) return false;
+    /* Both signed feeds describe the same complete release except for Profiles. */
+    for (size_t i = 0; i < full->count; i++) {
+        const Asset *a = &full->files[i], *b = &bridge.files[i];
+        if (a->path != b->path) return false;
+        if (!strcmp(a->path, PROFILE_MODULE)) {
+            if (strcmp(a->sha, AURORA_211_PROFILES) || strcmp(b->sha, AURORA_210_PROFILES)) return false;
+        } else if (a->size != b->size || strcmp(a->sha, b->sha)) return false;
+    }
+    return true;
+#else
+    (void)full;
+    return false;
+#endif
+}
+static bool completion_rows(const Journal *j) {
+    /* The second transaction owns only the known Profiles replacement. It
+       cannot replace another application modified since the bridge install. */
+    bool profiles = false;
+    for (size_t i = 0; i < j->count; i++) {
+        const Row *row = &j->rows[i];
+        if (!strcmp(row->path, PROFILE_MODULE)) {
+            profiles = !strcmp(row->old, AURORA_210_PROFILES) && !strcmp(row->next, AURORA_211_PROFILES);
+        } else if (strcmp(row->old, row->next)) return false;
+    }
+    return profiles;
+}
+static void restore_from_receipt(const char *current) {
+    Manifest m;
+#ifdef KF_ATMOSPHERE_EDITION
+    if (read_receipt(current, true, &m)) { restore_saved_flags(&m); return; }
+#endif
+    if (read_receipt(current, false, &m)) restore_saved_flags(&m);
+}
+static bool version_dir(char path[256], const Manifest *m, bool completion) {
     struct stat st;
-    snprintf(path, 256, OTA "/%s", m->version);
+    snprintf(path, 256, OTA "/%s%s", m->version, completion ? "-complete" : "");
     return stat(path, &st) && errno == ENOENT;
 }
 static bool install_asset(const char *stage, const char *target, size_t index, const Row *r) {
@@ -522,9 +587,9 @@ static bool install_asset(const char *stage, const char *target, size_t index, c
     }
     return gone(swap);
 }
-static bool commit(Journal *j, const Manifest *m, KfProgress cb, void *ctx) {
+static bool commit(Journal *j, const Manifest *m, bool completion, KfProgress cb, void *ctx) {
     char final[256], target[256], stage[256], backup[256], hex[65];
-    if (!version_dir(final, m)) return false;
+    if (!version_dir(final, m, completion) || (completion && !completion_rows(j))) return false;
     /* Validate all usable originals and pending stages before resuming writes. */
     for (size_t i = 0; i < j->count; i++) {
         Row *r = &j->rows[i];
@@ -563,8 +628,14 @@ static int recover_locked(KfUpdate *u, KfProgress cb, void *ctx) {
     struct stat st;
     if (stat(ACTIVE, &st)) return errno == ENOENT ? KF_CURRENT : fail(u, "Could not read the update journal.");
     Buffer feed = {0}; Manifest m; Journal j;
-    if (!from_file(ACTIVE "/stable.kfu", mem_sink, &feed, MAX_FEED) || !parse(&feed, &m) || !read_journal(&j, &m, ACTIVE "/originals.tsv") ||
-        !commit(&j, &m, cb, ctx)) return fail(u, "Recovery needs the card files. Keep the card and use the matching Windows installer.");
+    const char *error = "Recovery needs the card files. Keep the card and use the matching Windows installer.";
+    if (!from_file(ACTIVE "/stable.kfu", mem_sink, &feed, MAX_FEED) || !parse(&feed, &m) ||
+        !read_journal(&j, &m, ACTIVE "/originals.tsv")) return fail(u, error);
+    const Row *marker = &j.rows[j.count - 1];
+    /* A normal upgrade changes release.txt. The bridge completion keeps its
+       exact signed bytes even if power failed after Profiles was replaced. */
+    bool completion = !strcmp(marker->old, marker->next);
+    if ((completion && !bridge_for(&m)) || !commit(&j, &m, completion, cb, ctx)) return fail(u, error);
     kf_local(u); strcpy(u->message, "Recovered the interrupted update."); return KF_RECOVERED;
 }
 static bool count_space(const Manifest *m, uint64_t *needed) {
@@ -613,11 +684,12 @@ static bool prepare(FILE *blob, const Manifest *m, Journal *j, const char *curre
         if (strcmp(old, "-") && strcmp(old, a->sha)) {
             if (!strcmp(a->path, PROFILE_MODULE) &&
                 strcmp(old, "61aff6623d884cab86a2d7041b66ffeaa27092af8c467cc928ec6cb471e928ee") && strcmp(old, "b0e562b0104617a2b743adb64deec7de2d6122a76afd5efd06d1b26635a74c87") &&
-                strcmp(old, "67769c52f767bef031889baae7f65d767e9eb8c79514f2c93c375d50056c2346")) return false;
+                strcmp(old, "67769c52f767bef031889baae7f65d767e9eb8c79514f2c93c375d50056c2346") &&
+                strcmp(old, AURORA_210_PROFILES) && strcmp(old, AURORA_211_PROFILES)) return false;
             if (!strcmp(a->path, TRANSFER_MODULE) &&
                 strcmp(old, "c4922de663e7b7854f474bac058690995238184aba55fc1d4a8d54791c205193") &&
                 strcmp(old, "e1e6824a79658aa924dfa94b5099734923f1d3ebf5d3f45ec7af952d8d3af4bc") &&
-                strcmp(old, "02dd442cfd441675f54a4e78d38ad410027cd991b15abfb71ef8ec1034af2037")) return false;
+                strcmp(old, "02dd442cfd441675f54a4e78d38ad410027cd991b15abfb71ef8ec1034af2037") && strcmp(old, AURORA_TRANSFERS)) return false;
         }
         if (!strcmp(current, "1.1.0") && !strcmp(a->path, "hbmenu.nro") && strcmp(old, a->sha) &&
             strcmp(old, "d89d0a70d4844ac43b1d57e65b3787acc9255658f9ec4bf875bec0bee6a28c1d")) return false;
@@ -643,21 +715,23 @@ static int apply_locked(KfUpdate *u, KfProgress cb, void *ctx) {
     struct stat st;
     if (!stat(ACTIVE, &st) || errno != ENOENT) return fail(u, "Reopen the updater to recover the previous transaction.");
     char current[24], final[256];
-    if (!read_marker(SD MARKER, current) || strcmp(current, u->current) ||
-        compare(current, KF_MINIMUM) < 0 || compare(current, selection.version) != -1)
+    if (!read_marker(SD MARKER, current) || strcmp(current, u->current) || compare(current, KF_MINIMUM) < 0)
         return fail(u, "This update requires the matching KEFIRIZ " KF_EDITION " installation.");
-    if (!version_dir(final, &selection)) return fail(u, "A saved transaction for this version already exists.");
+    bool completion = can_complete(current, &selection, u->preview);
+    if (compare(current, selection.version) != -1 && !completion)
+        return fail(u, "This update requires the matching KEFIRIZ " KF_EDITION " installation.");
+    if (!version_dir(final, &selection, completion)) return fail(u, "A saved transaction for this version already exists.");
     if (!parents(PREP "/placeholder") || !clear_work() || !folder(PREP)) return fail(u, "Could not prepare the update directory.");
     uint64_t needed, available;
     if (!count_space(&selection, &needed) || !kf_free(&available) || available < needed)
         return fail(u, "Insufficient free microSD space for the update and its backup.");
-    char relative[128]; snprintf(relative, sizeof(relative), KF_UPDATES "/%s/update.bin", selection.version);
+    char relative[128]; snprintf(relative, sizeof(relative), "%s/%s/update.bin", feed_root(u->preview), selection.version);
     FILE *f = fopen(PREP "/payload.bin", "wb");
     if (!f) return fail(u, "Could not open a staging file on the card.");
     if (cb) cb("Downloading update", 0, selection.bytes, ctx);
     bool got;
     if (offline) {
-        char path[256]; offline_payload(path, &selection);
+        char path[256]; offline_payload(path, &selection, u->preview);
         got = from_file(path, file_sink, f, selection.bytes);
     } else got = kf_fetch(relative, file_sink, f, selection.bytes, cb, ctx);
     if (!close_out(f, got)) {
@@ -668,13 +742,14 @@ static int apply_locked(KfUpdate *u, KfProgress cb, void *ctx) {
     if (!f) return fail(u, "Could not read the download.");
     bool verified = prepare(f, &selection, &j, current, cb, ctx);
     fclose(f);
-    if (!verified) return fail(u, "Could not verify the update or back up the installed files.");
+    if (!verified || (completion && !completion_rows(&j)))
+        return fail(u, "Could not verify the update or back up the installed files.");
     if (!gone(PREP "/payload.bin") || !store_bytes(PREP "/stable.kfu", signed_feed.bytes, signed_feed.used))
         return fail(u, "Could not save the verified manifest.");
     f = fopen(PREP "/originals.tsv", "wb");
     if (!f || !close_out(f, record(f, &j)) || rename(PREP, ACTIVE))
         return fail(u, "The card could not save the update journal.");
-    if (!commit(&j, &selection, cb, ctx)) return fail(u, "Update interrupted. Reopen KEFIRIZ Updater to resume or use the Windows installer.");
+    if (!commit(&j, &selection, completion, cb, ctx)) return fail(u, "Update interrupted. Reopen KEFIRIZ Updater to resume or use the Windows installer.");
     selection.count = 0; kf_local(u); strcpy(u->message, "Update installed. Return to HOME to continue.");
     return KF_APPLIED;
 }

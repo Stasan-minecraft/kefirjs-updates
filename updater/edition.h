@@ -4,6 +4,7 @@
 #define KF_BASE "20.5.0-ams-1.10.1"
 #define KF_EDITION "Atmosphere edition"
 #define KF_UPDATES "updates/atmosphere/native"
+#define KF_PREVIEW_UPDATES KF_UPDATES "/full"
 #define KF_BOOT_ART "bootloader/res/KEFIRIZ-boot.bmp"
 #define KF_BOOT_ICON "bootloader/res/KEFIRIZ-CFW.bmp"
 #define KF_OTA "config/kefirjs/atmosphere-ota"
@@ -13,6 +14,7 @@
 #define KF_BASE "20.5.0-786"
 #define KF_EDITION "Horizon edition 786"
 #define KF_UPDATES "updates/native"
+#define KF_PREVIEW_UPDATES KF_UPDATES
 #define KF_BOOT_ART "bootloader/bootlogo_kefir.bmp"
 #define KF_BOOT_ICON "bootloader/res/atmosphere.bmp"
 #define KF_OTA "config/kefirjs/ota"

@@ -1,0 +1,18 @@
+KEFIRJS-SIGNED-1
+cdd33f172392abbd3ae698c915dc8d7330ece02e909a71388df711347fc371a99b3238b07b3cc41b5fad6f3169ba8e064ebbeaae82b00a872806ab740be69503
+KEFIRJS-UPDATE-1
+version	2.1.1
+base	20.5.0-ams-1.10.1
+channel	preview
+note	Native HOME keeps its own Basic White and Basic Black backgrounds under Aurora accents and toolbar icons.
+note	Windows install.bat builds artwork automatically from matching Horizon 20.5.0 resources on your card.
+note	Homebrew saves your own HOME resources when Horizon grants access. Check or retry in KEFIRIZ System.
+note	The release guide explains native themes. The lock screen uses its original layout.
+file	hbmenu.nro	399261	71447f9f76f7a31141cd2d53632b96af263b0eb02c830e6c2850f02d062bf6ab
+file	switch/KEFIRJS-Updater/KEFIRJS-Updater.nro	386425	0503fd8f28a7041e9b2e5becd2ba57959c6f962f064c504cec9bb22662f85550
+file	switch/KEFIRIZ-System/KEFIRIZ-System.nro	308239	2cd5b28fdd8f491f147a7a5c540d34b5eefa344191d20c07f885ba3ae39f0845
+file	atmosphere/contents/42000000004B4650/exefs.nsp	131597	6e56bdc65af6da093724d93419ad9f60e3f66da7f820d1072a39b2d85797d0a2
+file	atmosphere/contents/42000000004B4654/exefs.nsp	103925	cc26b4bbce60969f650ce3c543ab612f299f20864fd7d4c78029159dcb4fb117
+file	bootloader/res/KEFIRIZ-boot.bmp	3686454	61d714c98ace163e43c07a38e241a8daf2b1232b5b26f1d5dba10900f0abdde7
+file	bootloader/res/KEFIRIZ-CFW.bmp	147510	4c0e77177403b5d574cc3a763838357a98428877139670199d03ed9b6c99553f
+file	config/kefiriz/release.txt	35	166ad12edd2206a9e3b8a61847e8492c9d8a3f82eba10f9dae019ec4935534e7
