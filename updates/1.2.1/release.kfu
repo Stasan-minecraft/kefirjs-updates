@@ -1,0 +1,12 @@
+KEFIRJS-SIGNED-1
+2445806884e76f71c95f78d6d5a081a6629542fae25f74a64fe24130322f7f9affecccefcc91dfc951d6ecbf3cfdae44f0e59e551511e82d05cebb02034f7c0c
+KEFIRJS-UPDATE-1
+version	1.2.1
+base	20.5.0-786
+note	Install the new signed-update client and Homebrew interface.
+note	Reopen KEFIRJS Updater once to finish the system-service repair and boot artwork update.
+note	If the console cannot boot, extract the matching boot repair ZIP from the release page to your card.
+file	hbmenu.nro	378781	da6506b3ea6f6f6810a584133f71311171925daf2ee84c14645945e9dcd18f92
+file	switch/KEFIRJS-Updater/KEFIRJS-Updater.nro	378233	9238973906318b9e89b771b6528c860798197b1d5cc164260a5edeac401327e9
+file	switch/KEFIRIZ-System/KEFIRIZ-System.nro	287759	6a2252ff36a6b068126a38118c5f692d7daf0bb6b31af32f1ed55886fd56533c
+file	config/kefiriz/release.txt	36	c2cf825abcaa8c488946002ba5d6b7bac49a298d34eaff6683da5114e3d28bfb

@@ -1,13 +1,12 @@
 KEFIRJS-SIGNED-1
-4c0d3c6d72c5e37c2572291ea9b61e92c0b905eb1838153daa8d96ba411aa99200d233efdeffdad8cfc695a35577d2b6b42459444aa4443fc826a5a1fd30fa0c
+2445806884e76f71c95f78d6d5a081a6629542fae25f74a64fe24130322f7f9affecccefcc91dfc951d6ecbf3cfdae44f0e59e551511e82d05cebb02034f7c0c
 KEFIRJS-UPDATE-1
-version	1.2.0
+version	1.2.1
 base	20.5.0-786
-note	Check for updates and read release notes from the new KEFIRJS Updater.
-note	Open it from Homebrew, press X in KEFIRIZ System, or start a game while holding R + X.
-note	Install signed releases directly on your microSD with file verification and interrupted-update recovery.
-note	Retire known files from the old Kefir Updater while preserving personal changes.
-file	hbmenu.nro	324947	23574d871a64b7445ed0ed13a1fab757a7f8f314a828acf4efc39e7fa987624e
-file	switch/KEFIRJS-Updater/KEFIRJS-Updater.nro	374257	473b44b820347e884b1836fbdf2f20f2f7b32f801963847b4af72dafeda1c4c2
-file	switch/KEFIRIZ-System/KEFIRIZ-System.nro	275795	208bd6042f1f37169da2ba75259334e91128201d4d6fec3c68d89517abac5358
-file	config/kefiriz/release.txt	36	4751e7846779e7adef4a22bdc9a384a4fa08f7895c19e206c31c34ab4b501296
+note	Install the new signed-update client and Homebrew interface.
+note	Reopen KEFIRJS Updater once to finish the system-service repair and boot artwork update.
+note	If the console cannot boot, extract the matching boot repair ZIP from the release page to your card.
+file	hbmenu.nro	378781	da6506b3ea6f6f6810a584133f71311171925daf2ee84c14645945e9dcd18f92
+file	switch/KEFIRJS-Updater/KEFIRJS-Updater.nro	378233	9238973906318b9e89b771b6528c860798197b1d5cc164260a5edeac401327e9
+file	switch/KEFIRIZ-System/KEFIRIZ-System.nro	287759	6a2252ff36a6b068126a38118c5f692d7daf0bb6b31af32f1ed55886fd56533c
+file	config/kefiriz/release.txt	36	c2cf825abcaa8c488946002ba5d6b7bac49a298d34eaff6683da5114e3d28bfb

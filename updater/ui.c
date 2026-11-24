@@ -9,7 +9,7 @@ const char *up_title(UpScreen s) {
     static const char *const titles[] = {
         "Firmware updates", "Checking for updates", "You're up to date",
         "An update is available", "Install this update?", "Installing update",
-        "Update installed", "Update recovered", "Update needs attention", "Checking SD card"
+        "Update installed", "Update recovered", "Update needs attention", "Checking SD card", "Online check unavailable"
     };
     return titles[s];
 }
@@ -17,6 +17,7 @@ const char *up_primary(UpScreen s) {
     switch (s) {
     case UP_AVAILABLE: return "Review update";
     case UP_CONFIRM: return "Install update";
+    case UP_OFFLINE:
     case UP_ERROR: return "Try again";
     case UP_INSTALLED: return "Close";
     default: return up_busy(s) ? "" : "Check for updates";
@@ -24,6 +25,7 @@ const char *up_primary(UpScreen s) {
 }
 void up_result(UpView *v, int rc) {
     switch (rc) {
+    case KF_OFFLINE: v->screen = UP_OFFLINE; break;
     case KF_CURRENT: v->screen = UP_CURRENT; break;
     case KF_AVAILABLE: v->screen = UP_AVAILABLE; break;
     case KF_APPLIED: v->screen = UP_INSTALLED; break;

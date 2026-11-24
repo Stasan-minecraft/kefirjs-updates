@@ -1,0 +1,16 @@
+KEFIRJS-SIGNED-1
+fb9f02c2079861cd441d88be2d7e0b12f7f67805d03283e8728d57201dc1685e40575846e4b16d4309e29d1a8aac800732b421768833c16ceda7d213a5c75707
+KEFIRJS-UPDATE-1
+version	1.2.2
+base	20.5.0-786
+note	Fix the 2168-0008 startup fault in KEFIRIZ Profiles and background transfers on Horizon 20.5.0.
+note	Five original Favorites icons, full Homebrew library on X, new Hekate startup art.
+note	Updater supports two verified GitHub endpoints, connection diagnostics and complete offline repair kits.
+file	hbmenu.nro	378781	da6506b3ea6f6f6810a584133f71311171925daf2ee84c14645945e9dcd18f92
+file	switch/KEFIRJS-Updater/KEFIRJS-Updater.nro	378233	9238973906318b9e89b771b6528c860798197b1d5cc164260a5edeac401327e9
+file	switch/KEFIRIZ-System/KEFIRIZ-System.nro	287759	6a2252ff36a6b068126a38118c5f692d7daf0bb6b31af32f1ed55886fd56533c
+file	atmosphere/contents/42000000004B4650/exefs.nsp	94113	67769c52f767bef031889baae7f65d767e9eb8c79514f2c93c375d50056c2346
+file	atmosphere/contents/42000000004B4654/exefs.nsp	103468	02dd442cfd441675f54a4e78d38ad410027cd991b15abfb71ef8ec1034af2037
+file	bootloader/bootlogo_kefir.bmp	3686454	70cdaea32588eb2484f7972dd8f229359de3ba9f177d1b43c320154d965084e1
+file	bootloader/res/atmosphere.bmp	147510	915a37ef789fffea7c75216c4f01fd023988074bc7fc4f898265b0840f8937ce
+file	config/kefiriz/release.txt	36	789a218f451ac7d4fba3bf0917b0f5e31701b5a28ce69e3e191a2bc560418ce8

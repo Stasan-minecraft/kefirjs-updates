@@ -41,6 +41,7 @@ def main():
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument("--public-header", type=Path, required=True)
     cli.add_argument("--atmosphere-edition", action="store_true", help="Use the independent Atmosphere channel and archive")
+    cli.add_argument("--native", action="store_true", help="Sign the native service repair channel")
     cli.add_argument("--initialize", action="store_true")
     cli.add_argument("--archive", type=Path)
     cli.add_argument("--version")
@@ -71,7 +72,18 @@ def main():
     base = "20.5.0-ams-1.10.1" if independent else "20.5.0-786"
     edition = "Atmosphere edition" if independent else "Horizon edition 786"
     channel = "updates/atmosphere" if independent else "updates"
-    if independent and args.output.name != "atmosphere":
+    files = FILES
+    if args.native:
+        channel += "/native"
+        files = (*FILES[:-1],
+                 "atmosphere/contents/42000000004B4650/exefs.nsp",
+                 "atmosphere/contents/42000000004B4654/exefs.nsp",
+                 "bootloader/res/KEFIRIZ-boot.bmp" if independent else "bootloader/bootlogo_kefir.bmp",
+                 "bootloader/res/KEFIRIZ-CFW.bmp" if independent else "bootloader/res/atmosphere.bmp",
+                 FILES[-1])
+        if args.output.as_posix().rstrip("/").split("/")[-len(channel.split("/")):] != channel.split("/"):
+            raise ValueError("Wrong native update output directory")
+    if independent and not args.native and args.output.name != "atmosphere":
         raise ValueError("Select updates/atmosphere for this independent channel")
     body = ["KEFIRJS-UPDATE-1", "version\t" + args.version, "base\t" + base]
     body.extend("note\t" + note for note in notes)
@@ -87,10 +99,10 @@ def main():
         baseline = json.loads(Path(__file__).with_name("base-atmosphere-2.0.0.json" if independent else "base-1.1.0.json").read_text("ascii"))
         changed = {name for name in baseline.keys() | entries.keys()
                    if baseline.get(name) != entries.get(name, {}).get("sha256")}
-        if changed.difference(FILES):
+        if changed.difference(files):
             raise ValueError("The native client needs support for these additional changes: " +
-                             ", ".join(sorted(changed.difference(FILES))))
-        for name in FILES:
+                             ", ".join(sorted(changed.difference(files))))
+        for name in files:
             file = pack.read(root + "sd/" + name)
             size, digest = len(file), sha256(file).hexdigest()
             if entries[name]["sha256"] != digest or entries[name]["size"] != size:
@@ -100,6 +112,8 @@ def main():
             data.extend(file)
             body.append(f"file\t{name}\t{size}\t{digest}")
         standalone = pack.read(root + "sd/" + FILES[1])
+        rescue = {name: pack.read(root + "sd/" + name)
+                  for name in files if args.native and name.endswith("/exefs.nsp")}
     content = ("\n".join(body) + "\n").encode("ascii")
     envelope = b"KEFIRJS-SIGNED-1\n" + key.sign(content).hex().encode() + b"\n" + content
     folder = args.output / args.version
@@ -112,13 +126,13 @@ def main():
     (args.output / "stable.kfu").write_bytes(envelope)
     if args.offline_zip:
         members = {FILES[1]: standalone, f"config/kefirjs/offline/{channel}/stable.kfu": envelope,
-                   f"config/kefirjs/offline/{channel}/{args.version}/update.bin": data}
+                   f"config/kefirjs/offline/{channel}/{args.version}/update.bin": data, **rescue}
         with ZipFile(args.offline_zip, "w") as pack:
             for name, value in members.items():
                 entry = ZipInfo(name)
                 entry.compress_type = ZIP_DEFLATED
                 pack.writestr(entry, value)
-    print(f"Signed {args.version} for {len(FILES)} files, {len(data):,} bytes")
+    print(f"Signed {args.version} for {len(files)} files, {len(data):,} bytes")
 
 
 if __name__ == "__main__":

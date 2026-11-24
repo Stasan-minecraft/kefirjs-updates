@@ -1,0 +1,3 @@
+Install the new signed-update client and Homebrew interface.
+Reopen KEFIRJS Updater once to finish the system-service repair and boot artwork update.
+If the console cannot boot, extract the matching boot repair ZIP from the release page to your card.

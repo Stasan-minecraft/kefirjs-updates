@@ -1,26 +1,28 @@
 # KEFIRIZ · Switch updates
 
-**[KEFIRIZ 2.0.0 · independent Atmosphère edition (hardware preview)](updates/atmosphere/2.0.0/README.md)** uses upstream Atmosphère 1.10.1 on Horizon 20.5.0 and boots with the original Nintendo HOME and lock screen. The installer includes native artwork preparation and microSD recovery. [Download the full Windows installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.0.0/KEFIRIZ-Atmosphere-2.0.0.zip)
+**[KEFIRIZ 2.0.2 · Atmosphère edition (hardware preview)](updates/atmosphere/native/2.0.2/README.md)** targets Horizon 20.5.0 and official Atmosphère 1.10.1. [Complete Windows installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.0.2/KEFIRIZ-Atmosphere-2.0.2.zip)
+
+**2168-0008 at boot with program 42000000004B4650 or 42000000004B4654.** Power off the Switch and extract the matching repair kit to the microSD root. It replaces both affected system modules before boot. Open the included KEFIRJS Updater after startup to finish installing the five Favorites, boot art and network fix. [Atmosphère edition repair kit](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.0.2/KEFIRJS-Repair-Atmosphere-2.0.2.zip) · [Legacy 786 repair kit](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.0.2/KEFIRJS-Repair-786-1.2.2.zip)
+
+![KEFIRIZ Homebrew Favorites](media/homebrew-favorites-2.0.2.png)
 
 **Boot crash after applying a theme?** Power off the console, unzip the recovery tool on Windows and run **KEFIRIZ-Theme-Recovery.cmd** with the microSD connected. It backs up the active theme files before the next boot. [Download theme recovery](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.0.0/KEFIRIZ-Theme-Recovery.zip)
 
-## Legacy 786 edition
-
-Get KEFIRIZ for a Nintendo Switch already running **Horizon 20.5.0 / Kefir 786 / Atmosphère 1.10.0**. The release preserves Nintendo HOME and includes KEFIRIZ Homebrew, game profiles, background downloads and custom native themes.
-
-**[Download KEFIRIZ 1.2.0](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/v1.2.0/KEFIRIZ-786-1.2.0.zip)** · [Get KEFIRJS Updater](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/v1.2.0/KEFIRJS-Updater.nro) · [Release notes](updates/1.2.0/README.md)
-
 ## Update from a phone
 
-1. If your microSD already runs KEFIRIZ 1.1.0, download the standalone **KEFIRJS-Updater.nro** above in your phone's browser. With the console off, put it at `/switch/KEFIRJS-Updater/KEFIRJS-Updater.nro` on the card.
-2. Start your usual CFW. Hold **R** while launching an installed game, then open **KEFIRJS Updater** in Homebrew.
-3. The app checks for updates when it opens. Read the changes, select **Review update**, then **Install update**. Keep the microSD inserted until the updater reports completion. Reopen it to check the installed version.
+If the console cannot boot, open `config/kefiriz/release.txt` on the microSD. Its first line identifies the installed KEFIRIZ version and edition.
 
-If your console is offline, download the [offline update for microSD](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/v1.2.0/KEFIRJS-Offline-Update-1.2.0.zip) and extract it to the card root before opening the app. It includes the signed update, its payload and the standalone app.
+1. Download the repair ZIP for the edition already installed on the microSD. KEFIRIZ **2.0.x** uses the [Atmosphere edition repair kit](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.0.2/KEFIRJS-Repair-Atmosphere-2.0.2.zip). KEFIRIZ **1.1.x** and **1.2.x** on Kefir 786 use the [786 repair kit](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.0.2/KEFIRJS-Repair-786-1.2.2.zip).
+2. Power off the Switch. Back up the microSD and extract the complete ZIP to its root. Accept replacement of the two system services and the updater. The service repairs take effect on the next boot.
+3. Start the same CFW installation. Open **KEFIRJS Updater** from Homebrew, select **Review update**, then **Install update**. The kit includes the signed release and works offline. Restart after installation to load the new components.
 
-## Install on a configured Kefir 786 card
+A running older updater can also install the bootstrap through GitHub. Reopen it after that first update and install the full native update. If the console cannot reach HOME, use the matching repair ZIP before boot.
 
-Download the complete ZIP above on a phone or computer. Extract it **on Windows**, open **install.bat** and select the microSD. The installer checks the existing system and saves a rollback copy. Owners with 20.5.0 HOME exports in `/themes/systemData` also receive their available native layouts. The installer reports which screens it prepared. [Windows online installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/v1.2.0/KEFIRIZ-Installer.zip)
+## Install on a configured card
+
+For the independent Atmosphere edition, extract the full archive on a Windows PC and run **install.bat**. [Download the 2.0.2 installer](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.0.2/KEFIRIZ-Atmosphere-2.0.2.zip)
+
+For a configured Kefir 786 card that has never had KEFIRIZ installed, first run the 1.2.0 Windows installer. Before booting, extract the 1.2.2 repair kit to the microSD. Boot your usual CFW, open the updater and install the signed update. [Legacy 1.2.0 full package](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/v1.2.0/KEFIRIZ-786-1.2.0.zip) · [1.2.2 repair kit](https://github.com/Stasan-minecraft/kefirjs-updates/releases/download/atmosphere-v2.0.2/KEFIRJS-Repair-786-1.2.2.zip)
 
 ## Open the updater after installation
 

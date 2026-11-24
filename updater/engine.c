@@ -3,6 +3,7 @@
 #include "engine_platform.h"
 #include "publisher.h"
 #include "crypto/monocypher-ed25519.h"
+#include <dirent.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,12 +21,20 @@
 #define OFFLINE SD "config/kefirjs/offline/"
 #define MARKER "config/kefiriz/release.txt"
 #define UPDATER "switch/KEFIRJS-Updater/KEFIRJS-Updater.nro"
+#define PROFILE_DIR "atmosphere/contents/42000000004B4650"
+#define TRANSFER_DIR "atmosphere/contents/42000000004B4654"
+#define PROFILE_MODULE PROFILE_DIR "/exefs.nsp"
+#define TRANSFER_MODULE TRANSFER_DIR "/exefs.nsp"
+#define PARKED SD "config/kefiriz/profile-recovery/"
 #define SYSAPP "switch/KEFIRIZ-System/KEFIRIZ-System.nro"
 #define MAX_BLOB (32u * 1024u * 1024u)
 #define MAX_FEED 8192u
 #define COUNT(x) (sizeof(x) / sizeof((x)[0]))
 
-static const char *const allowed[] = { "hbmenu.nro", UPDATER, SYSAPP, MARKER };
+static const char *const allowed[] = {
+    "hbmenu.nro", UPDATER, SYSAPP,
+    PROFILE_MODULE, TRANSFER_MODULE, KF_BOOT_ART, KF_BOOT_ICON, MARKER
+};
 static const struct { const char *path, *hashes; } retired[] = {
 #include "retired.inc"
 };
@@ -215,22 +224,52 @@ void kf_local(KfUpdate *u) {
     memset(u, 0, sizeof(*u));
     if (!read_marker(SD MARKER, u->current)) strcpy(u->current, "Unknown");
 }
+static void offline_payload(char path[256], const Manifest *m) {
+    snprintf(path, 256, OFFLINE KF_UPDATES "/%s/update.bin", m->version);
+}
+static bool payload_present(const Manifest *m) {
+    char path[256]; struct stat st;
+    offline_payload(path, m);
+    return !stat(path, &st) && S_ISREG(st.st_mode) && st.st_size >= 0 &&
+           (uint64_t)st.st_size == m->bytes;
+}
 int kf_check(KfUpdate *u, KfProgress cb, void *ctx) {
     kf_local(u);
     selection.count = 0; signed_feed.used = 0; offline = false;
-    if (cb) cb("Checking GitHub", 0, 0, ctx);
-    if (!kf_fetch(KF_UPDATES "/stable.kfu", mem_sink, &signed_feed, MAX_FEED, NULL, NULL)) {
-        signed_feed.used = 0;
-        if (!from_file(OFFLINE KF_UPDATES "/stable.kfu", mem_sink, &signed_feed, MAX_FEED))
-            return fail(u, "Could not reach GitHub or find an offline update. Check the connection and system date.");
+    if (compare(u->current, KF_MINIMUM) < 0)
+        return fail(u, "Install KEFIRIZ " KF_EDITION " with the Windows installer first.");
+
+    // A complete, newer offline release can be installed with Wi-Fi turned off.
+    const char *local_path = OFFLINE KF_UPDATES "/stable.kfu";
+    Buffer local = {0};
+    Manifest local_release, verified;
+    bool local_read = from_file(local_path, mem_sink, &local, MAX_FEED);
+    bool local_valid = local_read && parse(&local, &local_release);
+    if (local_valid && compare(u->current, local_release.version) < 0 && payload_present(&local_release)) {
         offline = true;
+        signed_feed = local;
+        verified = local_release;
+    } else {
+        if (cb) cb("Checking GitHub", 0, 0, ctx);
+        if (kf_fetch(KF_UPDATES "/stable.kfu", mem_sink, &signed_feed, MAX_FEED, NULL, NULL)) {
+            if (!parse(&signed_feed, &verified)) return fail(u, "The online update signature or release format is invalid.");
+        } else {
+            const char *reason = kf_network_error();
+            if (local_valid && compare(u->current, local_release.version) >= 0) {
+                snprintf(u->message, sizeof(u->message), "Installed %s. The SD package is %s. %s",
+                         u->current, local_release.version, reason);
+                return KF_OFFLINE;
+            }
+            if (local_read && !local_valid)
+                return fail(u, "The offline update signature or release format is invalid. Copy the matching offline ZIP to the card again.");
+            snprintf(u->message, sizeof(u->message), "%s %s", reason, local_valid ?
+                     "The offline payload is incomplete. Extract the entire update ZIP to your microSD." :
+                     "You can also extract the offline update ZIP to your microSD.");
+            return KF_ERROR;
+        }
     }
-    Manifest verified;
-    if (!parse(&signed_feed, &verified)) return fail(u, "The update signature or release format is invalid.");
     strcpy(u->latest, verified.version); strcpy(u->notes, verified.notes); u->bytes = verified.bytes;
     int cmp = compare(u->current, u->latest);
-    if (cmp == -2 || compare(u->current, KF_MINIMUM) < 0)
-        return fail(u, "Install KEFIRIZ " KF_EDITION " with the Windows installer first.");
     if (cmp >= 0) {
         strcpy(u->message, cmp ? "The installed release is newer than this channel." : "You are up to date.");
         return KF_CURRENT;
@@ -269,6 +308,66 @@ static bool regular_hash(const char *path, char out[65]) {
     if (!in) { if (errno == ENOENT) { strcpy(out, "-"); return true; } return false; }
     bool ok = kf_hash(in, out);
     fclose(in); return ok;
+}
+static const struct {
+    const char *module, *dir, *pending, *fixed_sha;
+} services[] = {
+    {PROFILE_MODULE, SD PROFILE_DIR, PARKED "profiles/pending/boot2.flag",
+     "67769c52f767bef031889baae7f65d767e9eb8c79514f2c93c375d50056c2346"},
+    {TRANSFER_MODULE, SD TRANSFER_DIR, PARKED "transfer/pending/boot2.flag",
+     "02dd442cfd441675f54a4e78d38ad410027cd991b15abfb71ef8ec1034af2037"}
+};
+static bool has_saved_flag(void) {
+    struct stat st;
+    for (size_t i = 0; i < COUNT(services); i++)
+        if (!stat(services[i].pending, &st) && S_ISREG(st.st_mode)) return true;
+    return false;
+}
+static bool empty_flags(const char *dir) {
+    DIR *d = opendir(dir);
+    if (!d) return false;
+    struct dirent *e;
+    errno = 0;
+    while ((e = readdir(d)))
+        if (strcmp(e->d_name, ".") && strcmp(e->d_name, "..")) break;
+    /* libnx fsdev signals the end of a valid directory with ENOENT. */
+    bool empty = !e && (!errno || errno == ENOENT);
+    return closedir(d) == 0 && empty;
+}
+static void restore_saved_flags(const Manifest *m) {
+    char path[256], flags[256], hex[65];
+    struct stat st;
+    /* parse() requires the last signed asset to be the release marker. */
+    if (!regular_hash(SD MARKER, hex) || strcmp(hex, m->files[m->count - 1].sha)) return;
+    for (size_t i = 0; i < COUNT(services); i++) {
+        if (stat(services[i].pending, &st) || !S_ISREG(st.st_mode)) continue;
+        for (size_t j = 0; j < m->count; j++) {
+            if (strcmp(m->files[j].path, services[i].module) ||
+                strcmp(m->files[j].sha, services[i].fixed_sha)) continue;
+            snprintf(path, sizeof(path), SD "%s", services[i].module);
+            if (!regular_hash(path, hex) || strcmp(hex, services[i].fixed_sha)) break;
+            const char *const disabled[] = {".off", "/flags.off", "/exefs.nsp.off"};
+            bool available = true;
+            for (size_t k = 0; k < COUNT(disabled); k++) {
+                snprintf(path, sizeof(path), "%s%s", services[i].dir, disabled[k]);
+                if (!stat(path, &st) || errno != ENOENT) { available = false; break; }
+            }
+            if (!available) break;
+            snprintf(flags, sizeof(flags), "%s/flags", services[i].dir);
+            if (!empty_flags(flags)) break;
+            snprintf(path, sizeof(path), "%s/flags/boot2.flag", services[i].dir);
+            /* The recovery utility moved the user's file out of this directory.
+               Horizon rename is atomic and rejects an existing destination. */
+            (void)rename(services[i].pending, path);
+            break;
+        }
+    }
+}
+static bool has_receipt(const char *version_text, char path[256]) {
+    unsigned parts[3]; struct stat st;
+    if (!version(version_text, parts)) return false;
+    snprintf(path, 256, OTA "/%s/stable.kfu", version_text);
+    return !stat(path, &st) && S_ISREG(st.st_mode);
 }
 static bool is_base(void) {
     char hex[65];
@@ -317,9 +416,9 @@ static bool record(FILE *f, const Journal *j) {
     }
     return true;
 }
-static bool read_journal(Journal *j, const Manifest *m) {
+static bool read_journal(Journal *j, const Manifest *m, const char *path) {
     Buffer b = {0};
-    if (!from_file(ACTIVE "/originals.tsv", mem_sink, &b, MAX_FEED) ||
+    if (!from_file(path, mem_sink, &b, MAX_FEED) ||
         memchr(b.bytes, 0, b.used)) return false;
     char *cursor = b.bytes, *line = next_line(&cursor);
     if (!line || strcmp(line, "KEFIRJS-JOURNAL-1")) return false;
@@ -337,6 +436,14 @@ static bool read_journal(Journal *j, const Manifest *m) {
         if (!row_start(j, path, f[2], f[3])) return false;
     }
     return !*cursor && assets == m->count && !strcmp(j->rows[j->count-1].path, MARKER);
+}
+static void restore_from_receipt(const char *current) {
+    char path[256];
+    Buffer receipt = {0}; Manifest m; Journal j;
+    if (!has_receipt(current, path) || !from_file(path, mem_sink, &receipt, MAX_FEED) ||
+        !parse(&receipt, &m) || strcmp(m.version, current)) return;
+    snprintf(path, sizeof(path), OTA "/%s/originals.tsv", current);
+    if (read_journal(&j, &m, path)) restore_saved_flags(&m);
 }
 static bool version_dir(char path[256], const Manifest *m) {
     struct stat st;
@@ -401,7 +508,7 @@ static int recover_locked(KfUpdate *u, KfProgress cb, void *ctx) {
     struct stat st;
     if (stat(ACTIVE, &st)) return errno == ENOENT ? KF_CURRENT : fail(u, "Could not read the update journal.");
     Buffer feed = {0}; Manifest m; Journal j;
-    if (!from_file(ACTIVE "/stable.kfu", mem_sink, &feed, MAX_FEED) || !parse(&feed, &m) || !read_journal(&j, &m) ||
+    if (!from_file(ACTIVE "/stable.kfu", mem_sink, &feed, MAX_FEED) || !parse(&feed, &m) || !read_journal(&j, &m, ACTIVE "/originals.tsv") ||
         !commit(&j, &m, cb, ctx)) return fail(u, "Recovery needs the card files. Keep the card and use the matching Windows installer.");
     kf_local(u); strcpy(u->message, "Recovered the interrupted update."); return KF_RECOVERED;
 }
@@ -445,6 +552,15 @@ static bool prepare(FILE *blob, const Manifest *m, Journal *j, const char *curre
         if (cb) cb("Verifying files", i, m->count, ctx);
         snprintf(target, sizeof(target), SD "%s", a->path);
         if (!regular_hash(target, old)) return false;
+        /* The service IDs are project-owned. Leave unrecognized third-party
+           builds under either ID intact, even when the feed is authentic. */
+        if (strcmp(old, "-") && strcmp(old, a->sha)) {
+            if (!strcmp(a->path, PROFILE_MODULE) &&
+                strcmp(old, "61aff6623d884cab86a2d7041b66ffeaa27092af8c467cc928ec6cb471e928ee") && strcmp(old, "b0e562b0104617a2b743adb64deec7de2d6122a76afd5efd06d1b26635a74c87")) return false;
+            if (!strcmp(a->path, TRANSFER_MODULE) &&
+                strcmp(old, "c4922de663e7b7854f474bac058690995238184aba55fc1d4a8d54791c205193") &&
+                strcmp(old, "e1e6824a79658aa924dfa94b5099734923f1d3ebf5d3f45ec7af952d8d3af4bc")) return false;
+        }
         if (!strcmp(current, "1.1.0") && !strcmp(a->path, "hbmenu.nro") && strcmp(old, a->sha) &&
             strcmp(old, "d89d0a70d4844ac43b1d57e65b3787acc9255658f9ec4bf875bec0bee6a28c1d")) return false;
         member(dest, PREP, "new", j->count);
@@ -482,10 +598,13 @@ static int apply_locked(KfUpdate *u, KfProgress cb, void *ctx) {
     if (cb) cb("Downloading update", 0, selection.bytes, ctx);
     bool got;
     if (offline) {
-        char path[256]; snprintf(path, sizeof(path), OFFLINE "%s", relative);
+        char path[256]; offline_payload(path, &selection);
         got = from_file(path, file_sink, f, selection.bytes);
     } else got = kf_fetch(relative, file_sink, f, selection.bytes, cb, ctx);
-    if (!close_out(f, got)) return fail(u, "Download interrupted. Your installed release is still available.");
+    if (!close_out(f, got)) {
+        if (!got && !offline) return fail(u, kf_network_error());
+        return fail(u, "Could not read the update or save it to the card. Check the offline ZIP and free space.");
+    }
     Journal j; f = fopen(PREP "/payload.bin", "rb");
     if (!f) return fail(u, "Could not read the download.");
     bool verified = prepare(f, &selection, &j, current, cb, ctx);
@@ -506,6 +625,8 @@ static int exclusive(KfUpdate *u, KfProgress cb, void *ctx, bool recovery) {
     if (!parents(OTA "/operation.lock") || !kf_lock())
         return fail(u, "Could not lock the card. Close any other updater and try again.");
     int rc = recovery ? recover_locked(u, cb, ctx) : apply_locked(u, cb, ctx);
+    if ((rc == KF_CURRENT || rc == KF_APPLIED || rc == KF_RECOVERED) && has_saved_flag())
+        restore_from_receipt(u->current);
     kf_unlock();
     return rc;
 }
@@ -515,6 +636,10 @@ int kf_apply(KfUpdate *u, KfProgress cb, void *ctx) {
 int kf_recover(KfUpdate *u, KfProgress cb, void *ctx) {
     kf_local(u);
     struct stat st;
-    if (stat(ACTIVE, &st)) return errno == ENOENT ? KF_CURRENT : fail(u, "Could not read the update journal.");
+    if (stat(ACTIVE, &st)) {
+        if (errno != ENOENT) return fail(u, "Could not read the update journal.");
+        char path[256];
+        if (!has_saved_flag() || !has_receipt(u->current, path)) return KF_CURRENT;
+    }
     return exclusive(u, cb, ctx, true);
 }

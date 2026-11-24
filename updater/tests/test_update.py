@@ -74,8 +74,8 @@ def run_test(args):
         base[RETIRED] = b""
         base[CUSTOM] = b"personal catalog choices"
         base["switch/KEFIRIZ-Downloads/sentinel"] = b"my games"
-        feedpath = "config/kefirjs/offline/updates/stable.kfu"
-        blobpath = f"config/kefirjs/offline/updates/{release_ver}/update.bin"
+        feedpath = "config/kefirjs/offline/updates/native/stable.kfu"
+        blobpath = f"config/kefirjs/offline/updates/native/{release_ver}/update.bin"
 
         def card(name):
             root = tmp / name
@@ -113,7 +113,7 @@ def run_test(args):
                 if old != "-" and old != new:
                     assert digest((ledger / f"old-{idx:02d}.bin").read_bytes()) == old
                 assert (root / p).exists() == (new != "-")
-            run(root, "check", contain="up to date")
+            run(root, "check", contain="The SD package is")
 
         root = card("ordinary")
         print(run(root, "check", contain="available"), end="")
@@ -160,7 +160,7 @@ def run_test(args):
         run(root, "recover", 1, "Recovery needs")
         unchanged(root)
         root = card("invalid")
-        run(root, "apply", 1, "matching installed", KF_TEST_WRONG_HOS="1")
+        run(root, "apply", 1, "matching KEFIRIZ", KF_TEST_WRONG_HOS="1")
         unchanged(root)
         run(root, "apply", 1, "space", KF_TEST_FULL="1")
         unchanged(root)

@@ -74,6 +74,8 @@ static size_t write_cb(char *p, size_t size, size_t count, void *user) {
     if (n > s->limit || !s->sink(p, n, s->dst)) return 0;
     s->limit -= n; return n;
 }
+static char network_error[128] = "GitHub connection unavailable.";
+const char *kf_network_error(void) { return network_error; }
 bool kf_fetch(const char *rel, KfSink sink, void *dst, size_t limit, KfProgress cb, void *ctx) {
     (void)cb; (void)ctx;
     if (!getenv("KF_TEST_ONLINE")) return false;
@@ -91,7 +93,12 @@ bool kf_fetch(const char *rel, KfSink sink, void *dst, size_t limit, KfProgress 
     curl_easy_setopt(c, CURLOPT_SSL_VERIFYHOST, 2L);
     const char *ca = getenv("KF_TEST_CA");
     if (ca) curl_easy_setopt(c, CURLOPT_CAINFO, ca);
-    bool ok = curl_easy_perform(c) == CURLE_OK;
+    CURLcode rc = curl_easy_perform(c);
+    long http = 0;
+    curl_easy_getinfo(c, CURLINFO_RESPONSE_CODE, &http);
+    if (rc != CURLE_OK)
+        snprintf(network_error, sizeof(network_error), "GitHub request failed (%s, HTTP %ld).", curl_easy_strerror(rc), http);
+    bool ok = rc == CURLE_OK;
     curl_easy_cleanup(c); return ok;
 }
 static void tick(const char *phase, uint64_t done, uint64_t total, void *user) {

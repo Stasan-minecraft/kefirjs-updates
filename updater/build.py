@@ -60,7 +60,7 @@ def main():
         subprocess.run([cc, *flags, *sources, "-o", "updater.elf", "-lnx", "-lm"],
                        env=env, cwd=work, check=True)
         subprocess.run([tools / ("nacptool" + suffix), "--create", "KEFIRJS Updater", "KEFIRJS",
-                        "2.0.0" if args.atmosphere_edition else "1.2.0", "updater.nacp"], cwd=work, check=True)
+                        "2.0.2" if args.atmosphere_edition else "1.2.2", "updater.nacp"], cwd=work, check=True)
         subprocess.run([tools / ("elf2nro" + suffix), "updater.elf", "updater.nro",
                         "--icon=icon.jpg", "--nacp=updater.nacp"], cwd=work, check=True)
         binary = (work / "updater.nro").read_bytes()

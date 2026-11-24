@@ -1,12 +1,12 @@
 KEFIRJS-SIGNED-1
-4c289c02d62c158e183670a4b3bddd63b93eac86c32a9aba5f2973093c029e86403131bb775a21be604997e06cb6ba773300da1c664c1e50ea786cd2f1f15d0d
+46d01b3d69e9041d5ec4b674329370bf96a2a7563b6591c372ad4f011e8631977cff81b469cbd1289a9ecec3ea625a8356fea0687b41750dcebe0f4a4041d70c
 KEFIRJS-UPDATE-1
-version	2.0.0
+version	2.0.1
 base	20.5.0-ams-1.10.1
-note	Independent KEFIRIZ distribution for Horizon 20.5.0 on upstream Atmosphere 1.10.1.
-note	First boot uses the system HOME and lock screen. Homebrew never auto-installs a theme batch.
-note	Native HOME artwork uses a new export from this Switch. Recovery saves active layouts to the card.
-file	hbmenu.nro	320851	be59842f4780f5b9a641c9af801df247efd6e94666e07995894175313a6182c0
-file	switch/KEFIRJS-Updater/KEFIRJS-Updater.nro	374257	9f097a33f9dfb565c84c82f4396e2bd0c256d82350350fc9b73dfd1c343e50af
-file	switch/KEFIRIZ-System/KEFIRIZ-System.nro	275795	208bd6042f1f37169da2ba75259334e91128201d4d6fec3c68d89517abac5358
-file	config/kefiriz/release.txt	35	2a3b15ad93511da18739fb0685cd02e05a506b524e76559af535777c950c8e06
+note	Install the new signed-update client and Homebrew interface.
+note	Reopen KEFIRJS Updater once to finish the system-service repair and boot artwork update.
+note	If the console cannot boot, extract the matching boot repair ZIP from the release page to your card.
+file	hbmenu.nro	378781	ffd13fa442a43a550bc7421d7a0ff4427457dc0e1b950599777ee208e6e73574
+file	switch/KEFIRJS-Updater/KEFIRJS-Updater.nro	378233	2fc0802f88d598b3921b1f74132f06419d26ab5021ae5558f9e5df3aa5850ec9
+file	switch/KEFIRIZ-System/KEFIRIZ-System.nro	287759	e516145920d660b3d317ad6ccb4dfed782c8aa34a4c89716b58a94d761efac81
+file	config/kefiriz/release.txt	35	e6c0210c57c8dfc8790b29abf4c10a4a397b3647df45b1558a79ffca9cb13680

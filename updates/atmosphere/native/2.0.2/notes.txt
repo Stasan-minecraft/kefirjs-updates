@@ -1,0 +1,3 @@
+Fix the 2168-0008 startup fault in KEFIRIZ Profiles and background transfers on Horizon 20.5.0.
+Five original Favorites icons, full Homebrew library on X, new Hekate startup art.
+Updater supports two verified GitHub endpoints, connection diagnostics and complete offline repair kits.
