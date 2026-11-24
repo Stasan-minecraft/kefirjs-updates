@@ -103,6 +103,7 @@ bool k_release_line(const char *line, size_t n, SystemSnapshot *s) {
         if (!strcmp(s->release, "KEFIRIZ 2.1.0")) strcpy(s->release, "KEFIRIZ Aurora 2.1.0");
         if (!strcmp(s->release, "KEFIRIZ 2.1.1")) strcpy(s->release, "KEFIRIZ Aurora 2.1.1");
         if (!strcmp(s->release, "KEFIRIZ 2.2.0")) strcpy(s->release, "KEFIRIZ Meridian 2.2.0");
+        if (!strcmp(s->release, "KEFIRIZ 2.2.1")) strcpy(s->release, "KEFIRIZ Meridian 2.2.1");
     }
     return true;
 }

@@ -1,0 +1,18 @@
+KEFIRJS-SIGNED-1
+b97f92aae76f56c8ea4fc2169a18a38b10b647f33c102728bbcca5db539e11e1f968fcc7aaf7895db1c017cb6507e62a527df6afad06794a370ed06376dcf904
+KEFIRJS-UPDATE-1
+version	2.2.1
+base	20.5.0-ams-1.10.1
+channel	preview
+note	Play 2048, Minesweeper and SudokuNX completed in KEFIRIZ OS directly from Meridian Homebrew.
+note	Open KEFIRIZ Torrent, select a finished catalog game and press A. Both systems use the same microSD.
+note	The menu checks the game against its publisher's SHA-256 before launch.
+note	This version has a new first-run guide. The Windows installer also includes native Ember artwork.
+file	hbmenu.nro	404584	792b0a069e07efbe7b9520bff3484f66d642a60da1ac07ce824523cc56b8bb6c
+file	switch/KEFIRJS-Updater/KEFIRJS-Updater.nro	382847	e2ce32026c723ee4c30f74e290870bd054ae68fd73a2bef8fe0c7af9003e2eb4
+file	switch/KEFIRIZ-System/KEFIRIZ-System.nro	308645	c1e967cbf04453aa73feae79d6d2a09f0b977e92895c71ff60f1c257f1bf891c
+file	atmosphere/contents/42000000004B4650/exefs.nsp	131564	92c11e98d3d08c92aa5f3b70be003e1b2dcf1f7ced7ed1506a9d453a61ef1863
+file	atmosphere/contents/42000000004B4654/exefs.nsp	103925	cc26b4bbce60969f650ce3c543ab612f299f20864fd7d4c78029159dcb4fb117
+file	bootloader/res/KEFIRIZ-boot.bmp	3686454	616ded5cabb7eba45e406220e89f4e55801687505ff1b715317d08b393a99221
+file	bootloader/res/KEFIRIZ-CFW.bmp	147510	142322738f12d3ab601882231d5af0237a056dcb58d1bcc5170ae1152e4b9049
+file	config/kefiriz/release.txt	35	80cec20be0fecf3eb606dbcbea9f8746c25f8b9e57ed2a9dded42235b6174361

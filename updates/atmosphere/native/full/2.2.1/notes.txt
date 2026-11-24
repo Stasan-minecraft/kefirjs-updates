@@ -1,0 +1,4 @@
+Play 2048, Minesweeper and SudokuNX completed in KEFIRIZ OS directly from Meridian Homebrew.
+Open KEFIRIZ Torrent, select a finished catalog game and press A. Both systems use the same microSD.
+The menu checks the game against its publisher's SHA-256 before launch.
+This version has a new first-run guide. The Windows installer also includes native Ember artwork.

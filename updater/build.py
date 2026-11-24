@@ -61,7 +61,7 @@ def main():
                        env=env, cwd=work, check=True)
         name = "KEFIRIZ Updater"
         subprocess.run([tools / ("nacptool" + suffix), "--create", name, "KEFIRIZ",
-                        "2.2.0" if args.atmosphere_edition else "1.2.3", "updater.nacp"], cwd=work, check=True)
+                        "2.2.1" if args.atmosphere_edition else "1.2.3", "updater.nacp"], cwd=work, check=True)
         subprocess.run([tools / ("elf2nro" + suffix), "updater.elf", "updater.nro",
                         "--icon=icon.jpg", "--nacp=updater.nacp"], cwd=work, check=True)
         binary = (work / "updater.nro").read_bytes()

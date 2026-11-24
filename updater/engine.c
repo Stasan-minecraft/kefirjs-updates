@@ -30,6 +30,7 @@
 #define AURORA_210_PROFILES "90d294b6c7edda4492aea5698acf263840211c0cb4cd4aacbaf4900e851c7a4a"
 #define AURORA_211_PROFILES "6e56bdc65af6da093724d93419ad9f60e3f66da7f820d1072a39b2d85797d0a2"
 #define MERIDIAN_PROFILES "3bdaad2c7ed16725f0adc4b092f60dc666d5bdac7b37429b3268a139173ce8b2"
+#define MERIDIAN_221_PROFILES "92c11e98d3d08c92aa5f3b70be003e1b2dcf1f7ced7ed1506a9d453a61ef1863"
 #define AURORA_TRANSFERS "cc26b4bbce60969f650ce3c543ab612f299f20864fd7d4c78029159dcb4fb117"
 #define TRANSFER_MODULE TRANSFER_DIR "/exefs.nsp"
 #define PARKED SD "config/kefiriz/profile-recovery/"
@@ -241,6 +242,7 @@ static bool preview_selected(void) {
     return !stat(PREVIEW_CHOICE, &st) && S_ISDIR(st.st_mode);
 }
 static const char *profiles_for_release(const char *release) {
+    if (!strcmp(release, "2.2.1")) return MERIDIAN_221_PROFILES;
     if (!strcmp(release, "2.2.0")) return MERIDIAN_PROFILES;
     if (!strcmp(release, "2.1.1")) return AURORA_211_PROFILES;
     if (!strcmp(release, "2.1.0")) return AURORA_210_PROFILES;
@@ -363,10 +365,10 @@ static bool regular_hash(const char *path, char out[65]) {
     fclose(in); return ok;
 }
 static const struct {
-    const char *module, *dir, *pending, *known[4];
+    const char *module, *dir, *pending, *known[5];
 } services[] = {
     {PROFILE_MODULE, SD PROFILE_DIR, PARKED "profiles/pending/boot2.flag",
-     {"67769c52f767bef031889baae7f65d767e9eb8c79514f2c93c375d50056c2346", AURORA_210_PROFILES, AURORA_211_PROFILES, MERIDIAN_PROFILES}},
+     {"67769c52f767bef031889baae7f65d767e9eb8c79514f2c93c375d50056c2346", AURORA_210_PROFILES, AURORA_211_PROFILES, MERIDIAN_PROFILES, MERIDIAN_221_PROFILES}},
     {TRANSFER_MODULE, SD TRANSFER_DIR, PARKED "transfer/pending/boot2.flag",
      {"02dd442cfd441675f54a4e78d38ad410027cd991b15abfb71ef8ec1034af2037", AURORA_TRANSFERS, NULL}}
 };
@@ -691,7 +693,8 @@ static bool prepare(FILE *blob, const Manifest *m, Journal *j, const char *curre
             if (!strcmp(a->path, PROFILE_MODULE) &&
                 strcmp(old, "61aff6623d884cab86a2d7041b66ffeaa27092af8c467cc928ec6cb471e928ee") && strcmp(old, "b0e562b0104617a2b743adb64deec7de2d6122a76afd5efd06d1b26635a74c87") &&
                 strcmp(old, "67769c52f767bef031889baae7f65d767e9eb8c79514f2c93c375d50056c2346") &&
-                strcmp(old, AURORA_210_PROFILES) && strcmp(old, AURORA_211_PROFILES) && strcmp(old, MERIDIAN_PROFILES)) return false;
+                strcmp(old, AURORA_210_PROFILES) && strcmp(old, AURORA_211_PROFILES) &&
+                strcmp(old, MERIDIAN_PROFILES) && strcmp(old, MERIDIAN_221_PROFILES)) return false;
             if (!strcmp(a->path, TRANSFER_MODULE) &&
                 strcmp(old, "c4922de663e7b7854f474bac058690995238184aba55fc1d4a8d54791c205193") &&
                 strcmp(old, "e1e6824a79658aa924dfa94b5099734923f1d3ebf5d3f45ec7af952d8d3af4bc") &&

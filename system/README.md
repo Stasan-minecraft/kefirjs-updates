@@ -9,7 +9,7 @@ The request uses `romfsMountDataStorageFromProgram`. Horizon checks the running 
 Build using devkitA64, libnx 4.12, switch-tools, Python and Pillow 11.0.0. This produces the native app icon and a precomputed 105-pixel emblem from the same source artwork.
 
 ```sh
-python build.py --sdk /opt/devkitpro --version 2.2.0 --output KEFIRIZ-System.nro
+python build.py --sdk /opt/devkitpro --version 2.2.1 --output KEFIRIZ-System.nro
 ```
 
 Install the result at `sdmc:/switch/KEFIRIZ-System/KEFIRIZ-System.nro`. The program uses Horizon's shared font at runtime. The bundled font rasterizer is stb_truetype by Sean Barrett and contributors, at upstream commit f58f558c120e9b32c217290b80bad1a0729fbb2c. Its license accompanies its source.
